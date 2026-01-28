@@ -1,7 +1,7 @@
 import pandas as pd
 
 # 1. 파일 불러오기
-# 주소록 (Master) -> cp949
+# 행정동 코드 (Master) -> utf-8 
 df_master = pd.read_csv('to_map.csv', encoding='utf-8')
 # 매출장부 (Sales) -> utf-8
 df_sales = pd.read_csv('sales.csv', encoding='utf-8')
