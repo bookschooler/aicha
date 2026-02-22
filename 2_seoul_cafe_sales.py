@@ -1,3 +1,4 @@
+# 카페-음료 데이터만 추출
 import pandas as pd
 import os
 
