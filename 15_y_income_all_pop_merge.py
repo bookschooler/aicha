@@ -24,7 +24,12 @@ for file in files_to_merge:  # 명단에 있는 파일 이름을 하나씩 꺼�
         
     # 중복 열쇠 제거 (행 뻥튀기 방어!)
     df_right_clean = df_right.drop_duplicates(subset=keys, keep='first')  # df_right에서 열쇠가 똑같은 줄이 있으면 첫 번째만 남기고 다 지워버려.
-    
+
+    # 이미 df_master에 있는 열(키 제외)은 제거 (중복 열 방어!)
+    existing_cols = set(df_master.columns) - set(keys)
+    cols_to_drop = [c for c in df_right_clean.columns if c in existing_cols]
+    df_right_clean = df_right_clean.drop(columns=cols_to_drop)
+
     # LEFT JOIN 병합
     df_master = pd.merge(left=df_master, right=df_right_clean, on=keys, how='left')  # df_master를 왼쪽에, 방금 정리한 표를 오른쪽에 두고 열쇠 기준으로 합친 다음, 다시 df_master에 덮어씌워.
 
