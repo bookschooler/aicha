@@ -1,3 +1,5 @@
+#y +  모든 수요측 x지표 합치기
+
 import pandas as pd
 
 # 데이터 로드

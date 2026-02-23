@@ -1,3 +1,4 @@
+#income이랑 y_final 합치기
 import pandas as pd  # 판다스 라이브러리를 pd라는 이름으로 불러옵니다.
 
 # 1. 데이터 불러오기

@@ -34,5 +34,5 @@ print("-" * 30)
 print(df_final[['상권_코드', '상권_코드_명', '행정동_코드_명', '점포당_평균_매출']].head())
 
 # 5. 파일로 저장
-df_final.to_csv('merged_sales.csv', index=False, encoding='utf-8-sig')
+df_final.to_csv('sangkwon_haengjungdong.csv', index=False, encoding='utf-8-sig')
 print("✅ 'merged_sales.csv' 저장 완료! 고생했어 쏘피!")
