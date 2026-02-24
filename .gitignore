@@ -20,9 +20,6 @@ competitor.csv
 # 크롤링 중간/결과 파일 (실행 후 생성)
 tea_shops_raw.csv
 tea_shops_dedup.csv
-station_coords.csv
-search_keywords.csv
-to_map_with_station.csv
 crawl_progress.json
 
 # Python
