@@ -42,6 +42,13 @@ MAX_PAGE    = 3       # 쿼리당 최대 3페이지 (총 45건)
 SLEEP_SEC   = 0.2     # 요청 간 딜레이 (초)
 SAVE_EVERY  = 100     # N개 검색어마다 중간 저장
 
+# 유효 카테고리: 아래 중 하나로 시작하는 것만 저장
+# 테스트 결과 빌라/부동산/인테리어 등 노이즈 제거
+VALID_CATEGORY_PREFIXES = (
+    "음식점 > 카페",
+    "서비스,산업 > 식품 > 음료,주류제조",
+)
+
 
 # =====================================================
 # 카카오 키워드 검색 (페이지네이션 포함)
@@ -67,9 +74,13 @@ def search_kakao(query: str, headers: dict) -> list[dict]:
 
         docs = data.get("documents", [])
         for d in docs:
+            # 카페 계열 카테고리만 저장 (부동산/건설/금융 등 노이즈 제거)
+            category = d.get("category_name", "")
+            if not category.startswith(VALID_CATEGORY_PREFIXES):
+                continue
             results.append({
                 "가게명"      : d.get("place_name", ""),
-                "카테고리"    : d.get("category_name", ""),
+                "카테고리"    : category,
                 "지번주소"    : d.get("address_name", ""),
                 "도로명주소"  : d.get("road_address_name", ""),
                 "전화번호"    : d.get("phone", ""),
