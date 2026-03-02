@@ -15,15 +15,48 @@
 출력: y_demand_supply_trend_merge.csv (지하철_노선_수 컬럼 추가, 덮어쓰기)
 """
 
-import os                           # 작업 디렉토리 변경 (17번에서 상세 설명)
-import pandas as pd                 # 데이터프레임 라이브러리 (17번에서 상세 설명)
-import numpy as np                  # 수치 계산 (17번에서 상세 설명)
-from scipy.spatial import cKDTree   # 최근접 탐색 KD트리 (17번에서 상세 설명)
-import pyproj                       # 좌표계 변환 라이브러리 (17번에서 상세 설명)
+import os                           # 파일 경로, 작업 디렉토리 관련 내장 모듈
+#  └ [os 라이브러리]
+#    · 파이썬 내장 모듈 (별도 설치 불필요)
+#    · os.chdir(경로): 현재 작업 디렉토리 변경
+#    · 이후 pd.read_csv('파일명.csv') 처럼 파일명만 써도 이 폴더에서 찾음
+
+import pandas as pd                 # 표 형태 데이터(DataFrame) 다루는 핵심 라이브러리
+#  └ [pandas 라이브러리]
+#    · pip install pandas 로 설치
+#    · pd.read_csv(파일명): CSV 파일을 읽어 DataFrame으로 반환
+#    · df.merge(다른df, on=키, how='left'): 키 기준 LEFT JOIN
+#    · Series.map(딕셔너리): 시리즈 값을 딕셔너리 키로 조회해 대응 값으로 변환
+#    · Series.fillna(값): NaN을 지정값으로 채우기
+#    · Series.astype(타입): 데이터 타입 변환 (예: float → int)
+#    · Series.isna(): 각 원소가 NaN이면 True인 Boolean Series 반환
+#    · Series.tolist(): pandas Series → 파이썬 리스트 변환
+#    · df.to_csv(경로, index=False, encoding='utf-8-sig'): CSV 파일로 저장
+
+import numpy as np                  # 다차원 수치 배열 계산 라이브러리
+#  └ [numpy 라이브러리]
+#    · pip install numpy 로 설치
+#    · numpy 배열: 파이썬 리스트보다 수치 연산이 훨씬 빠름
+#    · array[인덱스배열]: 팬시 인덱싱 — 여러 위치 값을 한 번에 추출
+
+from scipy.spatial import cKDTree   # 고속 최근접 이웃 탐색 알고리즘 라이브러리
+#  └ [scipy.spatial.cKDTree]
+#    · pip install scipy 로 설치
+#    · KD-Tree: 다차원 공간에서 최근접 이웃을 빠르게 탐색하는 자료구조
+#    · cKDTree(좌표배열): C 언어 구현 고속 버전 (KDTree보다 빠름)
+#    · tree.query(점배열, k=1): 각 점에서 가장 가까운 k개 이웃 탐색 → (거리, 인덱스)
+#    · tree.query_ball_point(점, r=반경): 반경 내 모든 이웃 인덱스 리스트 반환
+
+import pyproj                       # 좌표계(CRS) 변환 라이브러리
 #  └ [pyproj 라이브러리]
-#    · 17번에서 from pyproj import Transformer 로 특정 클래스만 임포트했음
-#    · 여기서는 import pyproj 로 전체 임포트 후 pyproj.Transformer 로 접근
-#    · 두 방식 모두 동일하게 동작 (취향/스타일 차이)
+#    · pip install pyproj 로 설치
+#    · 다양한 좌표계 간 변환 지원
+#    · EPSG:4326: WGS84 (GPS/위경도 표준, station_coords.csv 좌표 형식)
+#    · EPSG:5181: 한국 TM좌표 (미터 단위, to_map.csv의 상권 좌표 형식)
+#    · pyproj.Transformer.from_crs(원본, 대상, always_xy=True): 변환기 생성
+#      - always_xy=True: 항상 (경도, 위도) 순서로 처리 (좌표 순서 혼동 방지)
+#    · import pyproj 후 pyproj.Transformer 로 접근
+#      또는 from pyproj import Transformer 로 클래스만 임포트해도 동일하게 동작
 
 os.chdir('/teamspace/studios/this_studio/aicha')
 
@@ -271,7 +304,10 @@ stations['노선_수'] = stations['역명'].map(STATION_LINES)
 # 매핑 안 된 역 확인 (딕셔너리에 빠진 역이 있는지)
 unmatched = stations[stations['노선_수'].isna()]['역명'].tolist()
 #  └ stations[조건]: 조건이 True인 행만 필터링 (Boolean Indexing)
-#  └ .isna(): NaN 여부 확인 (noqa: 22번에서 상세 설명)
+#  └ Series.isna()
+#    · 기본문법: Series.isna() 또는 Series.isnull() (동일)
+#    · 각 원소가 NaN이면 True, 값이 있으면 False인 Boolean Series 반환
+#    · 반대: Series.notna() → NaN이 아닐 때 True
 #  └ .tolist(): pandas Series → 파이썬 리스트 변환
 
 if unmatched:
@@ -287,8 +323,11 @@ print(f"역 데이터: {len(stations)}개, 노선_수 합계: {stations['노선_
 # WGS84 → TM(EPSG:5181) 좌표 변환
 # ══════════════════════════════════════════════════════
 transformer = pyproj.Transformer.from_crs("EPSG:4326", "EPSG:5181", always_xy=True)
-#  └ pyproj.Transformer.from_crs(): WGS84 → TM 변환기 생성 (17번에서 상세 설명)
+#  └ pyproj.Transformer.from_crs(원본CRS, 대상CRS, always_xy=True)
+#    · 기본문법: Transformer.from_crs(crs_from, crs_to, always_xy=False)
+#    · WGS84(위경도) → 한국 TM좌표(미터 단위) 변환기 생성
 #    · import pyproj 후 pyproj.Transformer.from_crs() 형태로 접근
+#    · always_xy=True: 항상 (경도, 위도) 순서로 처리 (좌표 순서 혼동 방지)
 
 stations['tm_x'], stations['tm_y'] = transformer.transform(
     stations['역_lon'].values, stations['역_lat'].values  # 역 WGS84 좌표 → TM 변환
@@ -330,8 +369,12 @@ for _, row in sanggwon.iterrows():  # 각 상권별로 순회
 noson_df = pd.DataFrame(results)  # 상권별 노선수 결과 → DataFrame
 print(f"\n상권별 지하철_노선_수 분포:")
 print(noson_df['지하철_노선_수'].value_counts().sort_index())
-#  └ .value_counts(): 각 값의 등장 횟수 (21번에서 상세 설명)
-#  └ .sort_index(): 인덱스(= 노선_수 값) 기준 오름차순 정렬
+#  └ Series.value_counts()
+#    · 기본문법: Series.value_counts(normalize=False, sort=True)
+#    · 각 값의 등장 횟수를 내림차순으로 반환 (가장 많이 나온 값이 위)
+#  └ .sort_index()
+#    · 기본문법: Series.sort_index(ascending=True)
+#    · 인덱스(= 노선_수 값) 기준 오름차순 정렬 (0→1→2→... 순서로 보기 좋게 출력)
 
 
 # ══════════════════════════════════════════════════════
