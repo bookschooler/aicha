@@ -186,7 +186,7 @@ alpha_map = {'Q2_잠재수요미실현': 0.85, 'Q1_검증시장공백': 0.7, 'Q3
 for q_label in ['Q4_레드오션', 'Q3_저성과포화', 'Q1_검증시장공백', 'Q2_잠재수요미실현']:
     sub = df[df['사분면'] == q_label]
     ax.scatter(
-        sub['residual_latest'], sub['supply_shortage'],
+        sub['residual_latest'], sub['supply_pct'],
         c=color_map[q_label], s=size_map[q_label],
         alpha=alpha_map[q_label],
         label=f"{q_label} ({len(sub)}개)",
@@ -196,7 +196,7 @@ for q_label in ['Q4_레드오션', 'Q3_저성과포화', 'Q1_검증시장공백'
 # Q2 상위 10개 라벨
 for _, row in df_q2.head(10).iterrows():
     name = str(row.get('상권_코드_명', ''))[:8]
-    ax.annotate(name, xy=(row['residual_latest'], row['supply_shortage']),
+    ax.annotate(name, xy=(row['residual_latest'], row['supply_pct']),
                 xytext=(5, 5), textcoords='offset points',
                 fontsize=7, color='#c0392b',
                 bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.7))
@@ -204,14 +204,14 @@ for _, row in df_q2.head(10).iterrows():
 # Q1 상위 5개 라벨 (파란색)
 for _, row in df_q1.head(5).iterrows():
     name = str(row.get('상권_코드_명', ''))[:8]
-    ax.annotate(name, xy=(row['residual_latest'], row['supply_shortage']),
+    ax.annotate(name, xy=(row['residual_latest'], row['supply_pct']),
                 xytext=(5, -12), textcoords='offset points',
                 fontsize=7, color='#1a5276',
                 bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.7))
 
 # 기준선
 ax.axvline(x=0, color='black', linewidth=1.2, linestyle='--', alpha=0.6)
-ax.axhline(y=median_supply, color='black', linewidth=1.2, linestyle='--', alpha=0.6)
+ax.axhline(y=0.5, color='black', linewidth=1.2, linestyle='--', alpha=0.6)
 
 ylim = ax.get_ylim()
 xlim = ax.get_xlim()
@@ -221,8 +221,8 @@ ax.text(xlim[0]*0.9, ylim[0]*0.5,  '③ 저성과·포화',      fontsize=10, co
 ax.text(xlim[1]*0.3,  ylim[0]*0.5,  '④ 레드오션',         fontsize=10, color='#95a5a6')
 
 ax.set_xlabel('OOF 잔차 (음수=수요 대비 저성과 / 양수=수요 대비 과성과)', fontsize=12)
-ax.set_ylabel('공급부족지수 1/(찻집수+1)', fontsize=12)
-ax.set_title('서울 찻집 블루오션 2D 매트릭스\n②잠재수요미실현(빨강) vs ①검증시장공백(파랑)', fontsize=14, fontweight='bold')
+ax.set_ylabel('복합 공급점수 (0.5×찻집희소성분위수 + 0.5×점포당매출분위수)', fontsize=11)
+ax.set_title('서울 찻집 블루오션 2D 매트릭스 (복합 공급지수 버전)\n②잠재수요미실현(빨강) vs ①검증시장공백(파랑)', fontsize=14, fontweight='bold')
 ax.legend(loc='lower right', fontsize=10)
 ax.grid(True, alpha=0.3)
 
