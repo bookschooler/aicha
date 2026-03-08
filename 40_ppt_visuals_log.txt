@@ -1,0 +1,18 @@
+데이터 로드 완료: df33=(9392, 31), df34=(9392, 10)
+[저장] C:\Users\user\Desktop\STA_track\pypjt\aicha\40_model_comparison.png
+[저장] C:\Users\user\Desktop\STA_track\pypjt\aicha\40_residual_diagnostics.png
+  잔차 왜도=-0.781, 첨도=2.084
+  Shapiro-Wilk (n=5000): stat=0.9700, p=0.0000
+[저장] C:\Users\user\Desktop\STA_track\pypjt\aicha\40_corr_matrix_6vars.png
+[저장] C:\Users\user\Desktop\STA_track\pypjt\aicha\40_univariate_r2_top10.png
+명동 포함 상권: ['명동역(명동재미로)', '명동(명동거리)']
+[저장] C:\Users\user\Desktop\STA_track\pypjt\aicha\40_myeongdong_coef_comparison.png
+  명동 포함 R²=0.4581 / 제외 R²=0.4546
+  계수 최대 변화: 0.0059 (집객시설_수_scaled)
+
+=== 생성 완료 ===
+40_model_comparison.png        : 모델 성능 비교 (XGBoost vs OLS)
+40_residual_diagnostics.png    : 잔차 진단 4종 (QQ/히스토/잔차vs적합/Scale-Location)
+40_corr_matrix_6vars.png       : 최종 6개 변수 상관행렬
+40_univariate_r2_top10.png     : 단변량 R² Top10 (선택/제외 색상 구분)
+40_myeongdong_coef_comparison.png : 명동 포함/제외 계수 비교

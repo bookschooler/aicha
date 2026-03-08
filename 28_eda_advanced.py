@@ -38,7 +38,7 @@ x_cols = [
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 print("① 다중공선성 히트맵 생성 중...")
 
-corr_rank = pd.read_csv('eda_correlation_table_nooutlier.csv', encoding='utf-8-sig')
+corr_rank = pd.read_csv('27b_eda_correlation_table_nooutlier.csv', encoding='utf-8-sig')
 top30_cols = corr_rank.head(30)['변수명'].tolist()
 top30_cols = [c for c in top30_cols if c in df.columns]
 
@@ -56,9 +56,9 @@ ax.set_title('X변수 간 다중공선성 히트맵 (R² 상위 30개, 20253 기
 ax.tick_params(axis='x', labelsize=8, rotation=45)
 ax.tick_params(axis='y', labelsize=8, rotation=0)
 plt.tight_layout()
-plt.savefig('eda_multicollinearity_heatmap.png', dpi=150, bbox_inches='tight')
+plt.savefig('28_eda_multicollinearity_heatmap.png', dpi=150, bbox_inches='tight')
 plt.close()
-print("  ✅ eda_multicollinearity_heatmap.png 저장")
+print("  ✅ 28_eda_multicollinearity_heatmap.png 저장")
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ② 분기별 매출 추이 + 카페 검색지수 연동
@@ -112,9 +112,9 @@ lines2, labels2 = ax2_twin.get_legend_handles_labels()
 ax2.legend(lines1 + lines2, labels1 + labels2, loc='upper left', fontsize=9)
 
 plt.tight_layout()
-plt.savefig('eda_quarterly_trend.png', dpi=150, bbox_inches='tight')
+plt.savefig('28_eda_quarterly_trend.png', dpi=150, bbox_inches='tight')
 plt.close()
-print("  ✅ eda_quarterly_trend.png 저장")
+print("  ✅ 28_eda_quarterly_trend.png 저장")
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ③ 상권 유형별 주요 변수 비교 (박스플롯)
@@ -151,9 +151,9 @@ for i, (col, label, scale) in enumerate(compare_vars):
 
 plt.suptitle('상권 유형별 주요 변수 분포 비교 (20253 기준, 이상치 제외)', fontsize=13, y=1.01)
 plt.tight_layout()
-plt.savefig('eda_by_district_type.png', dpi=150, bbox_inches='tight')
+plt.savefig('28_eda_by_district_type.png', dpi=150, bbox_inches='tight')
 plt.close()
-print("  ✅ eda_by_district_type.png 저장")
+print("  ✅ 28_eda_by_district_type.png 저장")
 
 print("\n✅ 전체 완료!")
 print("  - eda_multicollinearity_heatmap.png")

@@ -233,7 +233,7 @@
 | S9 | `37_radar_chart.png` (Q1 부분) |
 | S10 | `37_residual_trend.png` (Q2 부분) |
 | S12 | `39_sensitivity_overlap.png` |
-| S7 | `fs_shap_summary.png` 참고 가능 |
+| S7 | `31_fs_shap_summary.png` 참고 가능 |
 
 ---
 

@@ -72,8 +72,8 @@ for code, grp in df_top.groupby('상권_코드'):
 result_df = pd.DataFrame(results).sort_values('평균매출_억원', ascending=False)
 
 # 저장
-result_df.to_csv('eda_search_corr_by_district.csv', index=False, encoding='utf-8-sig')
-print("저장 완료: eda_search_corr_by_district.csv\n")
+result_df.to_csv('29_eda_search_corr_by_district.csv', index=False, encoding='utf-8-sig')
+print("저장 완료: 29_eda_search_corr_by_district.csv\n")
 
 # ── 요약 출력 ──
 print("=" * 60)

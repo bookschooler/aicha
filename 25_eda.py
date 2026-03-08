@@ -100,6 +100,6 @@ ax3.set_ylabel('log(매출 + 1)')
 ax3.tick_params(axis='x', rotation=45)
 
 plt.tight_layout()
-plt.savefig('eda_y_distribution.png', dpi=150, bbox_inches='tight')
-print("\n시각화 저장 완료: eda_y_distribution.png")
+plt.savefig('25_eda_y_distribution.png', dpi=150, bbox_inches='tight')
+print("\n시각화 저장 완료: 25_eda_y_distribution.png")
 plt.show()

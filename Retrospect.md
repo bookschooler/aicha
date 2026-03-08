@@ -1488,3 +1488,61 @@ OLS → β 계수 추정 → OOF 잔차 = 실제 - 예측 = 블루오션 신호
 | Tableau 대시보드 | 시각화 고도화 | 선택적 |
 
 *로그 업데이트: Claude Sonnet 4.6 / 2026-03-08*
+
+---
+
+# 추가 대화 — 2026-03-09 (출력 파일명 정리)
+
+## Q28. 결과물 파일명을 생성 스크립트 번호로 통일해줘
+
+### 결정 24 — 전체 출력 파일명 앞에 스크립트 번호 추가
+
+**배경:** eda_*.*, fs_*.* 형태로 저장된 출력 파일들이 어떤 스크립트에서 생성되었는지 불분명.
+→ 파일명만 보고 바로 추적 가능하도록 `스크립트번호_기존파일명` 형식으로 일괄 변경.
+
+**스크립트 → 출력 파일 매핑:**
+
+| 스크립트 | 구 파일명 | 신 파일명 |
+|---------|---------|---------|
+| 25_eda.py | eda_y_distribution.png | 25_eda_y_distribution.png |
+| 27_eda_correlation.py | eda_correlation_table.csv | 27_eda_correlation_table.csv |
+| 27_eda_correlation.py | eda_scatter_top20.png | 27_eda_scatter_top20.png |
+| 27b_eda_correlation_nooutlier.py | eda_correlation_table_nooutlier.csv | 27b_eda_correlation_table_nooutlier.csv |
+| 27b_eda_correlation_nooutlier.py | eda_scatter_top20_nooutlier.png | 27b_eda_scatter_top20_nooutlier.png |
+| 28_eda_advanced.py | eda_multicollinearity_heatmap.png | 28_eda_multicollinearity_heatmap.png |
+| 28_eda_advanced.py | eda_quarterly_trend.png | 28_eda_quarterly_trend.png |
+| 28_eda_advanced.py | eda_by_district_type.png | 28_eda_by_district_type.png |
+| 29_eda_search_by_district.py | eda_search_corr_by_district.csv | 29_eda_search_corr_by_district.csv |
+| 30_eda_advanced2.py | eda_vif_table.csv | 30_eda_vif_table.csv |
+| 30_eda_advanced2.py | eda_blueocean_candidates.csv | 30_eda_blueocean_candidates.csv |
+| 30_eda_advanced2.py | eda_vif.png | 30_eda_vif.png |
+| 30_eda_advanced2.py | eda_blueocean.png | 30_eda_blueocean.png |
+| 30_eda_advanced2.py | eda_gu_sales.png | 30_eda_gu_sales.png |
+| 31_feature_selection_xgb_shap.py | fs_xgb_feature_importance.csv | 31_fs_xgb_feature_importance.csv |
+| 31_feature_selection_xgb_shap.py | fs_shap_values.csv | 31_fs_shap_values.csv |
+| 31_feature_selection_xgb_shap.py | fs_xgb_importance.png | 31_fs_xgb_importance.png |
+| 31_feature_selection_xgb_shap.py | fs_shap_summary.png | 31_fs_shap_summary.png |
+| 31_feature_selection_xgb_shap.py | fs_shap_interaction_top.png | 31_fs_shap_interaction_top.png |
+| 31_feature_selection_xgb_shap.py | xgb_shap_analysis_report.md | 31_xgb_shap_analysis_report.md |
+
+**변경 사항:**
+- `git mv`로 20개 파일 rename (git 이력 유지)
+- 각 스크립트 내 save/read 경로 동시 업데이트 (25, 27, 27b, 28, 29, 30, 31번)
+- 28번이 27b 결과를 읽는 구조이므로 read 경로도 `27b_eda_correlation_table_nooutlier.csv`로 수정
+- 40_ppt_visuals.py read 경로도 `27b_eda_correlation_table_nooutlier.csv`로 수정
+- ppt_plan.md 내 파일 참조 업데이트
+
+---
+
+## 생성/수정 파일 목록
+
+| 파일 | 변경 내용 |
+|------|---------|
+| 20개 출력 파일 | git mv로 스크립트 번호 접두사 추가 |
+| 25~31번 스크립트 | 내부 save/read 파일명 업데이트 |
+| 40_ppt_visuals.py | read 경로 업데이트 |
+| ppt_plan.md | 파일 참조 업데이트 |
+
+---
+
+*로그 업데이트: Claude Sonnet 4.6 / 2026-03-09*

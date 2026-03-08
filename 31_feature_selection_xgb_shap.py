@@ -148,7 +148,7 @@ importance_df2.index = range(1, len(importance_df2)+1)
 
 print("\n[ XGBoost 변수 중요도 (feature_importances_) ]")
 print(importance_df2.to_string())
-importance_df2.to_csv('fs_xgb_feature_importance.csv', encoding='utf-8-sig')
+importance_df2.to_csv('31_fs_xgb_feature_importance.csv', encoding='utf-8-sig')
 
 # ══════════════════════════════════════════
 # 3. SHAP 분석
@@ -162,8 +162,8 @@ shap_values = explainer.shap_values(X)
 
 # SHAP 값 저장
 shap_df = pd.DataFrame(shap_values, columns=FEATURES)
-shap_df.to_csv('fs_shap_values.csv', index=False, encoding='utf-8-sig')
-print("SHAP 값 저장 완료: fs_shap_values.csv")
+shap_df.to_csv('31_fs_shap_values.csv', index=False, encoding='utf-8-sig')
+print("SHAP 값 저장 완료: 31_fs_shap_values.csv")
 
 # 변수별 평균 |SHAP| (전체 영향력)
 mean_shap = pd.DataFrame({
@@ -189,9 +189,9 @@ for bar, v in zip(bars, importance_df2['중요도'][::-1]):
     ax.text(bar.get_width() + 0.001, bar.get_y() + bar.get_height()/2,
             f'{v:.4f}', va='center', fontsize=8)
 plt.tight_layout()
-plt.savefig('fs_xgb_importance.png', dpi=150)
+plt.savefig('31_fs_xgb_importance.png', dpi=150)
 plt.close()
-print("\n→ fs_xgb_importance.png 저장 완료")
+print("\n→ 31_fs_xgb_importance.png 저장 완료")
 
 # ── (B) SHAP Summary Plot (beeswarm) ──
 fig, ax = plt.subplots(figsize=(11, 9))
@@ -199,9 +199,9 @@ shap.summary_plot(shap_values, X, feature_names=FEATURES,
                   plot_type='dot', show=False, max_display=22)
 plt.title('SHAP Summary Plot\n(점 색: 변수값 높음=빨강, 낮음=파랑 / X축: 매출에 미치는 영향)', fontsize=12)
 plt.tight_layout()
-plt.savefig('fs_shap_summary.png', dpi=150, bbox_inches='tight')
+plt.savefig('31_fs_shap_summary.png', dpi=150, bbox_inches='tight')
 plt.close()
-print("→ fs_shap_summary.png 저장 완료")
+print("→ 31_fs_shap_summary.png 저장 완료")
 
 # ── (C) SHAP 상위 변수 의존성 플롯 (상위 4개) ──
 top4 = mean_shap['변수명'].head(4).tolist()
@@ -217,9 +217,9 @@ for ax, feat in zip(axes.flatten(), top4):
     ax.set_title(f'{feat}', fontsize=11)
 plt.suptitle('SHAP 의존성 플롯 — 상위 4개 변수\n(점 색=상호작용 변수값, 기울기=비선형 효과)', fontsize=12)
 plt.tight_layout()
-plt.savefig('fs_shap_interaction_top.png', dpi=150, bbox_inches='tight')
+plt.savefig('31_fs_shap_interaction_top.png', dpi=150, bbox_inches='tight')
 plt.close()
-print("→ fs_shap_interaction_top.png 저장 완료")
+print("→ 31_fs_shap_interaction_top.png 저장 완료")
 
 # ══════════════════════════════════════════
 # 5. 최종 요약

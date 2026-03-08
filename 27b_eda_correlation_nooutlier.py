@@ -81,8 +81,8 @@ print("▶ R² 하위 10개 (관련 없는 변수)")
 print("=" * 80)
 print(result_df[['변수명', 'R²', '상관계수(r)', 'p-value', '유의']].tail(10).to_string(index=False))
 
-result_df.to_csv('eda_correlation_table_nooutlier.csv', index=False, encoding='utf-8-sig')
-print(f"\n✅ 전체 순위표 저장: eda_correlation_table_nooutlier.csv")
+result_df.to_csv('27b_eda_correlation_table_nooutlier.csv', index=False, encoding='utf-8-sig')
+print(f"\n✅ 전체 순위표 저장: 27b_eda_correlation_table_nooutlier.csv")
 
 # ── 상위 20개 산점도 ─────────────────────────────────────────────────────
 top20 = result_df.head(20)
@@ -109,6 +109,6 @@ for i, (_, row) in enumerate(top20.iterrows()):
 
 plt.suptitle('X변수 vs 당월_매출_금액 산점도 - R² 상위 20개 (이상치 제거, 20253 기준)', fontsize=13, y=1.01)
 plt.tight_layout()
-plt.savefig('eda_scatter_top20_nooutlier.png', dpi=150, bbox_inches='tight')
+plt.savefig('27b_eda_scatter_top20_nooutlier.png', dpi=150, bbox_inches='tight')
 plt.close()
-print("✅ 산점도 저장: eda_scatter_top20_nooutlier.png")
+print("✅ 산점도 저장: 27b_eda_scatter_top20_nooutlier.png")
