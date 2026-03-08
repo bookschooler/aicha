@@ -122,6 +122,8 @@ Track B: 복합 공급부족 지수 (모델 밖에서 계산)
 | `33_analysis_ready.csv` | 모델 입력 데이터 (9,392행) |
 | `32_selected_vars.csv` | Lasso 최종 선택 변수 |
 | `39_sensitivity_overlap.png` | 가중치 민감도 분석 (Q1 robust / Q2 합리적 범위 안정) |
+| `ppt_plan.md` | PPT 15장 구성 계획서 |
+| `ppt_critique_defense.md` | 통계학 교수 크리틱 15개 + 단계별 방어 논리 |
 
 ---
 
