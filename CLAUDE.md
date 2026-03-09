@@ -141,7 +141,10 @@ Track B: 복합 공급부족 지수 (모델 밖에서 계산)
 - **기록:** 중요 결정은 Retrospect.md에 Q&A 형식으로 추가
 - **스크립트 네이밍:** 번호_기능명.py (예: `39_sensitivity.py`)
 - **코딩 스타일:** 과도한 엔지니어링 지양, 필요한 것만
-- **MEMORY.md 위치:** `~/.claude/projects/c--Users-user-Desktop-STA-track-pypjt-aicha/memory/MEMORY.md`
+- **터미널 한글 출력:** cp949 인코딩 문제 → 항상 파일로 저장 후 Read 툴로 확인
+- **보고 시 항상 포함:** 생성된 소스 파일 + 결과물 파일 목록 명시
+- **GitHub:** bookschooler/aicha (branch: main)
+- **MEMORY.md 위치:** `~/.claude/projects/c--Users-Administrator-Desktop-pypjt-aicha/memory/MEMORY.md`
   - 이 파일은 git에 포함되지 않으므로 컴퓨터 간 공유 불가
   - 새 컴퓨터 시작 시 이 CLAUDE.md 내용을 MEMORY.md에 복사할 것
 
