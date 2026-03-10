@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Desktop\pypjt\aicha\34_ols.py", line 188, in <module>
+    print(log_text)
+    ~~~~~^^^^^^^^^^
+UnicodeEncodeError: 'cp949' codec can't encode character '\u2014' in position 2054: illegal multibyte sequence
