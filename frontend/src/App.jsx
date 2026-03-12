@@ -18,7 +18,8 @@ const App = () => {
     setError(null);
     
     try {
-      const response = await axios.get(`http://localhost:8000/search?address=${encodeURIComponent(address)}`);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await axios.get(`${apiUrl}/search?address=${encodeURIComponent(address)}`);
       setResult(response.data);
     } catch (err) {
       setError('상권 정보를 불러오는 데 실패했습니다.');
