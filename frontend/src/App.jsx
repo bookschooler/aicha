@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Search, MapPin, TrendingUp, BarChart2, Award, Info } from 'lucide-react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from 'recharts';
+import { SpeedInsights } from "@vercel/speed-insights/react" // 1. React용 속도 측정 센서를 불러옵니다. (중요: /next가 아니라 /react입니다!)
 
 const App = () => {
   const [address, setAddress] = useState('');
@@ -40,6 +41,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 p-4 md:p-8 font-sans">
+      <SpeedInsights />
       <header className="max-w-6xl mx-auto mb-10 text-center">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent mb-2">
           BlueOcean Finder
