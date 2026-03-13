@@ -115,6 +115,10 @@ const App = () => {
     try {
       const response = await axios.get(`${apiUrl}/search?address=${encodeURIComponent(address)}`);
       setResult(response.data);
+      // 서버 슬립으로 scatter 데이터가 없으면 검색 성공 후 재요청
+      if (!scatterData) {
+        axios.get(`${apiUrl}/scatter`).then(r => setScatterData(r.data)).catch(() => {});
+      }
     } catch (err) {
       const msg = err.response?.data?.detail;
       setError(msg || '상권 정보를 불러오는 데 실패했습니다. 서버가 깨어나는 중일 수 있으니 잠시 후 다시 시도해 주세요.');
