@@ -6,6 +6,8 @@ from pyproj import Transformer
 from scipy.spatial import cKDTree
 import requests
 import os
+from dotenv import load_dotenv
+load_dotenv()  # 로컬: api/.env 읽기 / Render: 환경변수로 대체됨
 
 app = FastAPI()
 
