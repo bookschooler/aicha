@@ -30,3 +30,8 @@ __pycache__/
 
 # 기타
 .DS_Store
+
+# 루트 레벨 npm (프론트엔드는 frontend/ 하위에서 관리)
+node_modules/
+package-lock.json
+package.json
