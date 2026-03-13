@@ -45,24 +45,24 @@ else:
 
 transformer = Transformer.from_crs("EPSG:4326", "EPSG:5181", always_xy=True)
 
-def get_coords_from_vworld(address: str):
-    """Vworld Geocoding API를 활용하여 주소 -> 좌표 변환"""
-    API_KEY = os.environ.get("VWORLD_API_KEY", "")
-    url = f"http://api.vworld.kr/req/address?service=address&request=getcoord&version=2.0&crs=epsg:4326&address={address}&refine=true&simple=false&format=json&type=road&key={API_KEY}"
-    
+def get_coords_from_kakao(address: str):
+    """Kakao Geocoding API를 활용하여 주소 -> 좌표 변환"""
+    API_KEY = os.environ.get("KAKAO_API_KEY", "")
+    if not API_KEY:
+        return None
+
+    url = "https://dapi.kakao.com/v2/local/search/address.json"
+    headers = {"Authorization": f"KakaoAK {API_KEY}"}
+
     try:
-        response = requests.get(url, timeout=3)
-        data = response.json()
-        if data.get("response", {}).get("status") == "OK":
-            coords = data["response"]["result"]["point"]
-            return float(coords["y"]), float(coords["x"])
+        res = requests.get(url, headers=headers, params={"query": address}, timeout=5)
+        data = res.json()
+        if data.get("documents"):
+            doc = data["documents"][0]
+            return float(doc["y"]), float(doc["x"])  # lat, lon
     except:
         pass
-    
-    # Fallback for demo
-    if "영등포" in address: return 37.520, 126.910
-    if "회기" in address: return 37.590, 127.056
-    return 37.566, 126.978
+    return None
 
 @app.get("/")
 def read_root():
@@ -73,7 +73,10 @@ def search_district(address: str = Query(..., description="검색할 주소")):
     if tree is None:
         raise HTTPException(status_code=500, detail="Data not loaded.")
     
-    lat, lon = get_coords_from_vworld(address)
+    coords = get_coords_from_kakao(address)
+    if coords is None:
+        raise HTTPException(status_code=400, detail="주소를 찾을 수 없습니다. 더 구체적인 주소(구·동 포함)를 입력해 주세요.")
+    lat, lon = coords
     tm_x, tm_y = transformer.transform(lon, lat)
     _, index = tree.query([tm_x, tm_y], k=1)
     
@@ -107,7 +110,7 @@ def search_district(address: str = Query(..., description="검색할 주소")):
         "district_name": target_name,
         "ranking": int(res['블루오션_랭킹']) if res['블루오션_랭킹'] < 9999 else "순위권 밖",
         "quadrant": str(res['사분면']),
-        "sales_prediction": float(res['매출_latest']),
+        "sales_prediction": float(res['매출_latest']) / 3,  # 분기 매출 → 월 매출
         "tea_shop_count": int(res['찻집수_latest']),
         "is_blue_ocean": bool(res.get('구조적블루오션', False)),
         "demand_factors": [

@@ -38,7 +38,8 @@ const App = () => {
       const response = await axios.get(`${apiUrl}/search?address=${encodeURIComponent(address)}`);
       setResult(response.data);
     } catch (err) {
-      setError('상권 정보를 불러오는 데 실패했습니다. 서버가 깨어나는 중일 수 있으니 잠시 후 다시 시도해 주세요.');
+      const msg = err.response?.data?.detail;
+      setError(msg || '상권 정보를 불러오는 데 실패했습니다. 서버가 깨어나는 중일 수 있으니 잠시 후 다시 시도해 주세요.');
     } finally {
       setLoading(false);
     }
@@ -135,11 +136,11 @@ const App = () => {
                 <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mb-6 group-hover:scale-110 transition-transform">
                   <TrendingUp size={32} />
                 </div>
-                <h3 className="text-slate-400 font-bold mb-2">예상 매출액</h3>
+                <h3 className="text-slate-400 font-bold mb-2">예상 월 매출액</h3>
                 <div className="text-4xl font-black text-white mb-2">
-                  {(result.sales_prediction / 10000).toLocaleString(undefined, {maximumFractionDigits: 0})} <span className="text-lg font-bold text-slate-500">만원</span>
+                  {(result.sales_prediction / 10000).toLocaleString(undefined, {maximumFractionDigits: 0})} <span className="text-lg font-bold text-slate-500">만원/월</span>
                 </div>
-                <p className="text-slate-500 text-sm font-medium">상권 내 수요 지표 기반 월 예측치</p>
+                <p className="text-slate-500 text-sm font-medium">상권 내 수요 지표 기반 예측치 (분기 ÷ 3)</p>
               </div>
 
               {/* District Name */}
