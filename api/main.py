@@ -32,11 +32,23 @@ try:
     df_ranking['매출_latest'] = df_ranking['매출_latest'].fillna(0)
     df_ranking['사분면'] = df_ranking['사분면'].fillna('일반 상권')
     df_ranking['블루오션_랭킹'] = pd.to_numeric(df_ranking['블루오션_랭킹'], errors='coerce').fillna(9999)
-    
+
+    # 사분면별 내부 순위 계산 (사분면 분류와 일관된 순위 제공)
+    q1_mask = df_ranking['사분면'] == 'Q1_검증시장공백'
+    q2_mask = df_ranking['사분면'] == 'Q2_잠재수요미실현'
+    df_ranking.loc[q1_mask, 'q1_rank'] = \
+        df_ranking.loc[q1_mask, 'q1_score'].rank(ascending=False, method='min').astype(int)
+    df_ranking.loc[q2_mask, 'q2_rank'] = \
+        df_ranking.loc[q2_mask, 'q2_score'].rank(ascending=False, method='min').astype(int)
+
 except Exception as e:
     print(f"Error loading data: {e}")
     df_map = pd.DataFrame(columns=['상권_코드', '상권_코드_명', '엑스좌표_값', '와이좌표_값'])
     df_ranking = pd.DataFrame()
+
+# 사분면별 총 수 (사전 계산)
+Q1_TOTAL = int((df_ranking['사분면'] == 'Q1_검증시장공백').sum()) if not df_ranking.empty else 0
+Q2_TOTAL = int((df_ranking['사분면'] == 'Q2_잠재수요미실현').sum()) if not df_ranking.empty else 0
 
 # KDTree 구성 — ranked 상권(unified_ranking.csv)만 사용해 항상 유효한 매핑 보장
 ranked_names = set(df_ranking['상권_코드_명']) if not df_ranking.empty else set()
@@ -112,16 +124,29 @@ def search_district(address: str = Query(..., description="검색할 주소")):
         }
 
     res = ranking_row.iloc[0]
-    # 분기 매출 → 월 환산. sales_total = 상권 카페음료 업종 합산, sales_per_store = 점포당 평균
+    # 분기 매출 → 월 환산
     cafe_store_count = float(res.get('카페음료_점포수', 1)) or 1
     sales_total = float(res['매출_latest']) / 3
     sales_per_store = float(res.get('cafe_revenue_per_store', res['매출_latest'] / cafe_store_count)) / 3
+
+    # 사분면에 맞는 내부 순위 계산
+    quadrant = str(res['사분면'])
+    if quadrant == 'Q1_검증시장공백':
+        qrank = int(res['q1_rank']) if not pd.isna(res.get('q1_rank')) else None
+        qtotal = Q1_TOTAL
+    elif quadrant == 'Q2_잠재수요미실현':
+        qrank = int(res['q2_rank']) if not pd.isna(res.get('q2_rank')) else None
+        qtotal = Q2_TOTAL
+    else:
+        qrank = None
+        qtotal = None
+
     return {
         "address": address,
         "district_name": target_name,
-        "ranking": int(res['블루오션_랭킹']),
-        "total_ranked": TOTAL_RANKED,
-        "quadrant": str(res['사분면']),
+        "ranking": qrank,
+        "total_ranked": qtotal,
+        "quadrant": quadrant,
         "sales_total": sales_total,       # 상권 내 카페음료 업종 전체 월매출 합산
         "sales_per_store": sales_per_store,  # 점포당 월평균 매출
         "sales_prediction": sales_total,  # 하위 호환용 (기존 필드 유지)

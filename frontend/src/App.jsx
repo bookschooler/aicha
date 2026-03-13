@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { Search, MapPin, TrendingUp, BarChart2, Award, Info, Activity, HelpCircle } from 'lucide-react';
 import {
@@ -21,32 +22,54 @@ const QUADRANT_ORDER = ['Q1_검증시장공백', 'Q2_잠재수요미실현', 'Q4
 
 const getQuadrantColor = (quad) => QUADRANT_META[quad]?.color ?? '#475569';
 
-// 블루오션 여부 hover 설명 컴포넌트
-const BlueOceanTooltip = ({ is_blue_ocean }) => {
+// 블루오션 여부 hover 설명 컴포넌트 — Portal로 렌더링해 부모 overflow에 잘리지 않음
+const BlueOceanTooltip = () => {
   const [show, setShow] = useState(false);
-  const ref = useRef(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef(null);
+
+  const calcPos = () => {
+    if (!btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    const TW = 272; // tooltip width (w-68 ≈ 272px)
+    const TH = 160; // approx height
+    let left = rect.left - TW / 2 + rect.width / 2;
+    if (left < 8) left = 8;
+    if (left + TW > window.innerWidth - 8) left = window.innerWidth - TW - 8;
+    let top = rect.top - TH - 8;
+    if (top < 8) top = rect.bottom + 8;
+    setPos({ top, left });
+  };
+
   useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setShow(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    const hide = () => setShow(false);
+    document.addEventListener('scroll', hide, true);
+    return () => document.removeEventListener('scroll', hide, true);
   }, []);
+
   return (
-    <div ref={ref} className="relative flex items-center gap-2">
+    <div className="flex items-center">
       <button
-        onMouseEnter={() => setShow(true)}
+        ref={btnRef}
+        onMouseEnter={() => { calcPos(); setShow(true); }}
         onMouseLeave={() => setShow(false)}
-        onClick={() => setShow(v => !v)}
+        onClick={() => { if (!show) { calcPos(); setShow(true); } else setShow(false); }}
         className="text-blue-200/50 hover:text-blue-200 transition-colors"
       >
         <HelpCircle size={14} />
       </button>
-      {show && (
-        <div className="absolute bottom-full right-0 mb-2 w-64 bg-slate-900 border border-slate-600 rounded-xl p-3 text-xs text-slate-300 shadow-2xl z-50">
+      {show && createPortal(
+        <div
+          style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 9999, width: 272 }}
+          className="bg-slate-900 border border-slate-600 rounded-xl p-3 text-xs text-slate-300 shadow-2xl"
+          onMouseEnter={() => setShow(true)}
+          onMouseLeave={() => setShow(false)}
+        >
           <div className="font-bold text-white mb-2">블루오션 분류 기준</div>
           <div className="space-y-1.5">
             <div className="flex items-start gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 mt-1 flex-shrink-0" />
-              <span><b className="text-emerald-400">블루오션 확인됨</b>: 찻집이 없는 상권(공급부족 지수 최대)이면서 수요 잠재력이 높은 곳(Q2 잠재수요 미실현)</span>
+              <span><b className="text-emerald-400">블루오션 확인됨</b>: 찻집이 없는 상권(공급부족 지수 최대)이면서 Q2 잠재수요 미실현에 해당하는 곳</span>
             </div>
             <div className="flex items-start gap-2">
               <span className="w-2 h-2 rounded-full bg-slate-400 mt-1 flex-shrink-0" />
@@ -56,7 +79,8 @@ const BlueOceanTooltip = ({ is_blue_ocean }) => {
           <div className="mt-2 pt-2 border-t border-slate-700 text-slate-500">
             현재 분석 대상: 1,036개 서울 상권
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -162,15 +186,28 @@ const App = () => {
                       <span className="text-3xl font-bold text-blue-200">위</span>
                     </div>
                     <div className="bg-black/20 backdrop-blur-md px-6 py-2 rounded-full text-sm font-black text-white border border-white/10 mb-10">
-                      전체 {(result.total_ranked ?? 1036).toLocaleString()}개 상권 중
+                      {QUADRANT_META[result.quadrant]
+                        ? `${QUADRANT_META[result.quadrant].label} ${(result.total_ranked ?? 0).toLocaleString()}개 상권 중`
+                        : `${(result.total_ranked ?? 0).toLocaleString()}개 상권 중`}
                     </div>
                   </>
                 ) : (
                   <div className="mb-10 text-center">
-                    <div className="text-4xl font-black text-white/60 mb-2">미분석 상권</div>
-                    <div className="bg-black/20 px-4 py-2 rounded-full text-sm text-white/70 border border-white/10">
-                      분석 대상 {(result.total_ranked ?? 1036).toLocaleString()}개 외 상권
-                    </div>
+                    {result.quadrant && (result.quadrant === 'Q3_저성과포화' || result.quadrant === 'Q4_레드오션') ? (
+                      <>
+                        <div className="text-3xl font-black text-white/60 mb-2">순위 미제공</div>
+                        <div className="bg-black/20 px-4 py-2 rounded-full text-sm text-white/70 border border-white/10">
+                          {QUADRANT_META[result.quadrant]?.label} 상권
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-3xl font-black text-white/60 mb-2">미분석 상권</div>
+                        <div className="bg-black/20 px-4 py-2 rounded-full text-sm text-white/70 border border-white/10">
+                          분석 대상 외 상권
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 
