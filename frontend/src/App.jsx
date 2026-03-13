@@ -275,10 +275,13 @@ const App = () => {
                   <p className="text-slate-500 text-sm font-medium">검색 주소와 가장 인접한 분석 상권</p>
                 </div>
 
-                {/* Supply Shortage */}
+                {/* Tea shop penetration rate */}
                 {(() => {
-                  const pct = result.supply_shortage ?? 0;
-                  const color = pct >= 90 ? 'emerald' : pct >= 50 ? 'amber' : 'rose';
+                  const teaCnt  = result.tea_shop_count ?? 0;
+                  const cafeCnt = result.cafe_store_count ?? 1;
+                  const ratio   = cafeCnt > 0 ? Math.round((teaCnt / cafeCnt) * 100) : 0;
+                  // 낮을수록 찻집이 없어 블루오션
+                  const color = ratio === 0 ? 'emerald' : ratio < 15 ? 'amber' : 'rose';
                   const colorMap = {
                     emerald: { border: 'hover:border-emerald-500/50', bg: 'bg-emerald-500/10', text: 'text-emerald-400', val: 'text-emerald-300' },
                     amber:   { border: 'hover:border-amber-500/50',   bg: 'bg-amber-500/10',   text: 'text-amber-400',   val: 'text-amber-300' },
@@ -290,14 +293,16 @@ const App = () => {
                       <div className={`w-14 h-14 ${c.bg} rounded-2xl flex items-center justify-center ${c.text} mb-6 group-hover:scale-110 transition-transform`}>
                         <BarChart2 size={32} />
                       </div>
-                      <h3 className="text-slate-400 font-bold mb-2">시장 공백 지수</h3>
+                      <h3 className="text-slate-400 font-bold mb-2">찻집 시장 침투율</h3>
                       <div className={`text-4xl font-black ${c.val} mb-1`}>
-                        {pct}<span className="text-2xl font-bold text-slate-500">%</span>
+                        {ratio}<span className="text-2xl font-bold text-slate-500">%</span>
                       </div>
-                      <div className="bg-slate-700/50 rounded-xl px-4 py-1.5 text-xs text-slate-400 mb-2">
-                        찻집 경쟁 점포 <span className="text-white font-bold">{result.tea_shop_count ?? 0}개</span>
+                      <div className="bg-slate-700/50 rounded-xl px-3 py-1.5 text-xs text-slate-400 mb-2">
+                        카페 <span className="text-white font-bold">{cafeCnt}개</span> 중 찻집 <span className="text-white font-bold">{teaCnt}개</span>
                       </div>
-                      <p className="text-slate-500 text-xs">100%에 가까울수록 공급 공백 큼</p>
+                      <p className="text-slate-500 text-xs">
+                        공급 공백 지수 <span className="text-slate-400 font-medium">{result.supply_shortage ?? 0}%</span>
+                      </p>
                     </div>
                   );
                 })()}
