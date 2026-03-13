@@ -38,9 +38,13 @@ except Exception as e:
     df_map = pd.DataFrame(columns=['상권_코드', '상권_코드_명', '엑스좌표_값', '와이좌표_값'])
     df_ranking = pd.DataFrame()
 
-# KDTree 구성
-if not df_map.empty:
-    map_coords = df_map[['엑스좌표_값', '와이좌표_값']].values
+# KDTree 구성 — ranked 상권(unified_ranking.csv)만 사용해 항상 유효한 매핑 보장
+ranked_names = set(df_ranking['상권_코드_명']) if not df_ranking.empty else set()
+df_map_ranked = df_map[df_map['상권_코드_명'].isin(ranked_names)].reset_index(drop=True)
+TOTAL_RANKED = len(df_map_ranked)
+
+if not df_map_ranked.empty:
+    map_coords = df_map_ranked[['엑스좌표_값', '와이좌표_값']].values
     tree = cKDTree(map_coords)
 else:
     tree = None
@@ -82,7 +86,7 @@ def search_district(address: str = Query(..., description="검색할 주소")):
     tm_x, tm_y = transformer.transform(lon, lat)
     _, index = tree.query([tm_x, tm_y], k=1)
     
-    target_name = df_map.iloc[index]['상권_코드_명']
+    target_name = df_map_ranked.iloc[index]['상권_코드_명']
     ranking_row = df_ranking[df_ranking['상권_코드_명'] == target_name]
     
     default_demand = [
@@ -98,9 +102,10 @@ def search_district(address: str = Query(..., description="검색할 주소")):
         return {
             "address": address,
             "district_name": target_name,
-            "ranking": "순위권 밖",
-            "quadrant": "일반 상권",
-            "sales_prediction": 0,
+            "ranking": None,
+            "total_ranked": TOTAL_RANKED,
+            "quadrant": None,
+            "sales_prediction": None,
             "tea_shop_count": 0,
             "is_blue_ocean": False,
             "demand_factors": default_demand,
@@ -110,7 +115,8 @@ def search_district(address: str = Query(..., description="검색할 주소")):
     return {
         "address": address,
         "district_name": target_name,
-        "ranking": int(res['블루오션_랭킹']) if res['블루오션_랭킹'] < 9999 else "순위권 밖",
+        "ranking": int(res['블루오션_랭킹']),
+        "total_ranked": TOTAL_RANKED,
         "quadrant": str(res['사분면']),
         "sales_prediction": float(res['매출_latest']) / 3,  # 분기 매출 → 월 매출
         "tea_shop_count": int(res['찻집수_latest']),
