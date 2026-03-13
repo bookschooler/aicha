@@ -214,7 +214,7 @@ const App = () => {
                   <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mb-6 group-hover:scale-110 transition-transform">
                     <TrendingUp size={32} />
                   </div>
-                  <h3 className="text-slate-400 font-bold mb-2">카페업종 월매출 규모</h3>
+                  <h3 className="text-slate-400 font-bold mb-2">동종업계 월매출 규모</h3>
                   {result.sales_total != null ? (
                     <>
                       <div className="text-4xl font-black text-white mb-1">
