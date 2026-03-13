@@ -123,6 +123,27 @@ def search_district(address: str = Query(..., description="검색할 주소")):
         ],
     }
 
+@app.get("/scatter")
+def get_scatter_data():
+    """2D 매트릭스 scatter plot용 전체 상권 데이터"""
+    cols = ['상권_코드_명', 'supply_shortage', 'residual_latest', '사분면']
+    if df_ranking.empty:
+        return {"points": [], "threshold_x": 0.999, "threshold_y": 0.0}
+
+    sub = df_ranking[[c for c in cols if c in df_ranking.columns]].copy()
+    sub = sub.dropna(subset=['supply_shortage', 'residual_latest'])
+
+    # supply_shortage는 대부분 1.0에 몰려있어서 시각적 jitter 추가 (seed 고정)
+    rng = np.random.default_rng(42)
+    sub['x'] = sub['supply_shortage'] + rng.uniform(-0.025, 0.025, len(sub))
+    sub['y'] = sub['residual_latest']
+
+    return {
+        "points": sub[['상권_코드_명', 'x', 'y', '사분면']].to_dict(orient='records'),
+        "threshold_x": 0.999,
+        "threshold_y": 0.0,
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
