@@ -112,13 +112,20 @@ def search_district(address: str = Query(..., description="검색할 주소")):
         }
 
     res = ranking_row.iloc[0]
+    # 분기 매출 → 월 환산. sales_total = 상권 카페음료 업종 합산, sales_per_store = 점포당 평균
+    cafe_store_count = float(res.get('카페음료_점포수', 1)) or 1
+    sales_total = float(res['매출_latest']) / 3
+    sales_per_store = float(res.get('cafe_revenue_per_store', res['매출_latest'] / cafe_store_count)) / 3
     return {
         "address": address,
         "district_name": target_name,
         "ranking": int(res['블루오션_랭킹']),
         "total_ranked": TOTAL_RANKED,
         "quadrant": str(res['사분면']),
-        "sales_prediction": float(res['매출_latest']) / 3,  # 분기 매출 → 월 매출
+        "sales_total": sales_total,       # 상권 내 카페음료 업종 전체 월매출 합산
+        "sales_per_store": sales_per_store,  # 점포당 월평균 매출
+        "sales_prediction": sales_total,  # 하위 호환용 (기존 필드 유지)
+        "cafe_store_count": int(cafe_store_count),
         "tea_shop_count": int(res['찻집수_latest']),
         "is_blue_ocean": bool(res.get('구조적블루오션', False)),
         "demand_factors": [

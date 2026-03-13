@@ -209,19 +209,28 @@ const App = () => {
 
               {/* Metrics Dashboard */}
               <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Sales Prediction */}
+                {/* Sales Scale */}
                 <div className="bg-slate-800/40 border border-slate-700 p-8 rounded-3xl flex flex-col items-center text-center group hover:border-emerald-500/50 transition-all duration-300">
                   <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mb-6 group-hover:scale-110 transition-transform">
                     <TrendingUp size={32} />
                   </div>
-                  <h3 className="text-slate-400 font-bold mb-2">예상 월 매출액</h3>
-                  {result.sales_prediction != null ? (
+                  <h3 className="text-slate-400 font-bold mb-2">카페업종 월매출 규모</h3>
+                  {result.sales_total != null ? (
                     <>
-                      <div className="text-4xl font-black text-white mb-2">
-                        {(result.sales_prediction / 10000).toLocaleString(undefined, {maximumFractionDigits: 0})}
+                      <div className="text-4xl font-black text-white mb-1">
+                        {(result.sales_total / 10000).toLocaleString(undefined, {maximumFractionDigits: 0})}
                         <span className="text-lg font-bold text-slate-500"> 만원/월</span>
                       </div>
-                      <p className="text-slate-500 text-sm font-medium">수요 지표 기반 예측치 (분기 ÷ 3)</p>
+                      <p className="text-slate-500 text-xs mb-3">상권 내 카페음료 업종 전체 합산 ({result.cafe_store_count ?? '?'}개 점포)</p>
+                      {result.sales_per_store != null && (
+                        <div className="bg-slate-700/50 rounded-xl px-4 py-2 w-full">
+                          <span className="text-slate-400 text-xs">점포당 월평균 </span>
+                          <span className="text-emerald-400 font-bold text-sm">
+                            {(result.sales_per_store / 10000).toLocaleString(undefined, {maximumFractionDigits: 0})}만원
+                          </span>
+                          <span className="text-slate-500 text-xs"> (창업 참고)</span>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div className="text-2xl font-black text-slate-500">분석 데이터 없음</div>
