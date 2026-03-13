@@ -47,7 +47,7 @@ transformer = Transformer.from_crs("EPSG:4326", "EPSG:5181", always_xy=True)
 
 def get_coords_from_vworld(address: str):
     """Vworld Geocoding API를 활용하여 주소 -> 좌표 변환"""
-    API_KEY = "7E5E3E6A-9B3B-3B3B-3B3B-3B3B3B3B3B3B" # Placeholder
+    API_KEY = os.environ.get("VWORLD_API_KEY", "")
     url = f"http://api.vworld.kr/req/address?service=address&request=getcoord&version=2.0&crs=epsg:4326&address={address}&refine=true&simple=false&format=json&type=road&key={API_KEY}"
     
     try:
@@ -80,6 +80,15 @@ def search_district(address: str = Query(..., description="검색할 주소")):
     target_name = df_map.iloc[index]['상권_코드_명']
     ranking_row = df_ranking[df_ranking['상권_코드_명'] == target_name]
     
+    default_demand = [
+        {"subject": "집객시설", "value": 50},
+        {"subject": "직장인구", "value": 50},
+        {"subject": "소득금액", "value": 50},
+        {"subject": "가구수",   "value": 50},
+        {"subject": "검색지수", "value": 50},
+        {"subject": "지하철",   "value": 50},
+    ]
+
     if ranking_row.empty:
         return {
             "address": address,
@@ -88,9 +97,10 @@ def search_district(address: str = Query(..., description="검색할 주소")):
             "quadrant": "일반 상권",
             "sales_prediction": 0,
             "tea_shop_count": 0,
-            "is_blue_ocean": False
+            "is_blue_ocean": False,
+            "demand_factors": default_demand,
         }
-    
+
     res = ranking_row.iloc[0]
     return {
         "address": address,
@@ -99,15 +109,15 @@ def search_district(address: str = Query(..., description="검색할 주소")):
         "quadrant": str(res['사분면']),
         "sales_prediction": float(res['매출_latest']),
         "tea_shop_count": int(res['찻집수_latest']),
-        "is_blue_ocean": bool(res['구조적블루오션']),
+        "is_blue_ocean": bool(res.get('구조적블루오션', False)),
         "demand_factors": [
-            {"subject": "직장인구", "value": float(res.get('q2_supply_score', 0.5)) * 100},
-            {"subject": "가구수", "value": float(res.get('q1_supply_score', 0.5)) * 100},
-            {"subject": "소득금액", "value": float(res.get('q2_residual_score', 0.5)) * 100},
-            {"subject": "지하철", "value": float(res.get('q1_residual_score', 0.5)) * 100},
-            {"subject": "집객시설", "value": float(res.get('q1_score', 0.5)) * 100},
-            {"subject": "검색지수", "value": float(res.get('q2_score', 0.5)) * 100}
-        ]
+            {"subject": "집객시설", "value": round(float(res.get('집객시설_수_pct', 50)), 1)},
+            {"subject": "직장인구", "value": round(float(res.get('총_직장_인구_수_pct', 50)), 1)},
+            {"subject": "소득금액", "value": round(float(res.get('월_평균_소득_금액_pct', 50)), 1)},
+            {"subject": "가구수",   "value": round(float(res.get('총_가구_수_pct', 50)), 1)},
+            {"subject": "검색지수", "value": round(float(res.get('카페_검색지수_pct', 50)), 1)},
+            {"subject": "지하철",   "value": round(float(res.get('지하철_노선_수_pct', 50)), 1)},
+        ],
     }
 
 if __name__ == "__main__":
