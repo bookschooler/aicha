@@ -215,22 +215,13 @@ const App = () => {
                     <TrendingUp size={32} />
                   </div>
                   <h3 className="text-slate-400 font-bold mb-2">동종업계 월매출 규모</h3>
-                  {result.sales_total != null ? (
+                  {result.sales_per_store != null ? (
                     <>
                       <div className="text-4xl font-black text-white mb-1">
-                        {(result.sales_total / 10000).toLocaleString(undefined, {maximumFractionDigits: 0})}
+                        {(result.sales_per_store / 10000).toLocaleString(undefined, {maximumFractionDigits: 0})}
                         <span className="text-lg font-bold text-slate-500"> 만원/월</span>
                       </div>
-                      <p className="text-slate-500 text-xs mb-3">상권 내 카페음료 업종 전체 합산 ({result.cafe_store_count ?? '?'}개 점포)</p>
-                      {result.sales_per_store != null && (
-                        <div className="bg-slate-700/50 rounded-xl px-4 py-2 w-full">
-                          <span className="text-slate-400 text-xs">점포당 월평균 </span>
-                          <span className="text-emerald-400 font-bold text-sm">
-                            {(result.sales_per_store / 10000).toLocaleString(undefined, {maximumFractionDigits: 0})}만원
-                          </span>
-                          <span className="text-slate-500 text-xs"> (창업 참고)</span>
-                        </div>
-                      )}
+                      <p className="text-slate-500 text-xs">점포당 월평균 ({result.cafe_store_count ?? '?'}개 점포 기준)</p>
                     </>
                   ) : (
                     <div className="text-2xl font-black text-slate-500">분석 데이터 없음</div>
