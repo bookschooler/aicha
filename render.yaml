@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: aicha-api
+    runtime: python
+    rootDir: api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: KAKAO_API_KEY
+        sync: false   # Render 대시보드 > Environment 탭에서 직접 값 입력 필요
