@@ -323,6 +323,21 @@ const App = () => {
                         <PolarGrid stroke="#334155" />
                         <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
                         <Radar name="상권 지수" dataKey="value" stroke="#6366f1" strokeWidth={3} fill="#6366f1" fillOpacity={0.3} />
+                        <Tooltip
+                          cursor={false}
+                          content={({ active, payload }) => {
+                            if (!active || !payload?.length) return null;
+                            const item = payload[0]?.payload;
+                            if (!item) return null;
+                            return (
+                              <div className="bg-slate-900 border border-indigo-500/50 rounded-xl p-3 shadow-2xl" style={{ maxWidth: 220 }}>
+                                <div className="font-bold text-indigo-400 text-xs mb-1.5">{item.subject}</div>
+                                <div className="text-white text-sm font-semibold leading-snug">{item.detail ?? '-'}</div>
+                                <div className="text-slate-500 text-xs mt-1.5">서울 내 {item.value}백분위</div>
+                              </div>
+                            );
+                          }}
+                        />
                       </RadarChart>
                     </ResponsiveContainer>
                   </div>

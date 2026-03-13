@@ -9,6 +9,22 @@ import os
 from dotenv import load_dotenv
 load_dotenv()  # 로컬: api/.env 읽기 / Render: 환경변수로 대체됨
 
+def _si(v, d=0):
+    """안전한 int 변환 (NaN/None → d)"""
+    try:
+        f = float(v)
+        return d if (f != f) else int(f)  # NaN check
+    except:
+        return d
+
+def _sf(v, d=0.0):
+    """안전한 float 변환 (NaN/None → d)"""
+    try:
+        f = float(v)
+        return d if (f != f) else f
+    except:
+        return d
+
 app = FastAPI()
 
 # CORS 설정
@@ -37,6 +53,35 @@ try:
     df_ranking['unified_score'] = df_ranking[['q1_score', 'q2_score']].max(axis=1)
     df_ranking['unified_rank'] = df_ranking['unified_score'].rank(
         ascending=False, method='min').astype(int)
+
+    # 수요 변수 백분위 계산 (0~100, 높을수록 상위)
+    import re as _re
+    _raw_to_pct = {
+        '집객시설_수_raw':       '집객시설_수_pct',
+        '총_직장_인구_수_raw':   '총_직장_인구_수_pct',
+        '월_평균_소득_금액_raw': '월_평균_소득_금액_pct',
+        '총_가구_수_raw':       '총_가구_수_pct',
+        '카페_검색지수_raw':     '카페_검색지수_pct',
+    }
+    for raw_col, pct_col in _raw_to_pct.items():
+        if raw_col in df_ranking.columns:
+            df_ranking[pct_col] = df_ranking[raw_col].rank(pct=True, na_option='keep') * 100
+        else:
+            df_ranking[pct_col] = 50.0
+
+    def _count_lines(subway_str):
+        if not subway_str or (isinstance(subway_str, float) and subway_str != subway_str):
+            return 0
+        lines = set(_re.findall(
+            r'(\d+호선|경의중앙선|신분당선|경춘선|수인분당선|공항철도|경강선|서해선)',
+            str(subway_str)
+        ))
+        return len(lines)
+
+    df_ranking['지하철_노선_수_raw'] = df_ranking['지하철_역_목록'].apply(_count_lines) \
+        if '지하철_역_목록' in df_ranking.columns else 0
+    df_ranking['지하철_노선_수_pct'] = df_ranking['지하철_노선_수_raw'].rank(
+        pct=True, na_option='keep') * 100
 
 except Exception as e:
     print(f"Error loading data: {e}")
@@ -125,26 +170,46 @@ def search_district(address: str = Query(..., description="검색할 주소")):
     quadrant = str(res['사분면'])
     urank = int(res['unified_rank']) if not pd.isna(res.get('unified_rank')) else None
 
+    # 지하철 역 목록 (NaN 처리)
+    subway_raw = res.get('지하철_역_목록', '')
+    try:
+        subway_str = '' if pd.isna(subway_raw) else str(subway_raw).strip()
+    except Exception:
+        subway_str = str(subway_raw).strip() if subway_raw else ''
+    if not subway_str:
+        n_lines = _si(res.get('지하철_노선_수', 0))
+        subway_str = f'{n_lines}개 노선' if n_lines > 0 else '인근 지하철 없음 (1.5km 내)'
+
+    # 검색지수 상위 % (카페_검색지수_pct 는 0~100 백분위)
+    cafe_pct = _sf(res.get('카페_검색지수_pct', 50), 50.0)
+    search_upper = max(1, round(100 - cafe_pct))
+
     return {
         "address": address,
         "district_name": target_name,
         "ranking": urank,
         "total_ranked": TOTAL_RANKED,
         "quadrant": quadrant,
-        "sales_total": sales_total,       # 상권 내 카페음료 업종 전체 월매출 합산
-        "sales_per_store": sales_per_store,  # 점포당 월평균 매출
-        "sales_prediction": sales_total,  # 하위 호환용 (기존 필드 유지)
+        "sales_total": sales_total,
+        "sales_per_store": sales_per_store,
+        "sales_prediction": sales_total,
         "cafe_store_count": int(cafe_store_count),
         "tea_shop_count": int(res['찻집수_latest']),
-        "supply_shortage": round(float(res.get('supply_shortage', 0)) * 100, 1),  # 0~1 → 0~100%
+        "supply_shortage": round(float(res.get('supply_shortage', 0)) * 100, 1),
         "is_blue_ocean": quadrant in ('Q1_검증시장공백', 'Q2_잠재수요미실현'),
         "demand_factors": [
-            {"subject": "집객시설", "value": round(float(res.get('집객시설_수_pct', 50)), 1)},
-            {"subject": "직장인구", "value": round(float(res.get('총_직장_인구_수_pct', 50)), 1)},
-            {"subject": "소득금액", "value": round(float(res.get('월_평균_소득_금액_pct', 50)), 1)},
-            {"subject": "가구수",   "value": round(float(res.get('총_가구_수_pct', 50)), 1)},
-            {"subject": "검색지수", "value": round(float(res.get('카페_검색지수_pct', 50)), 1)},
-            {"subject": "지하철",   "value": round(float(res.get('지하철_노선_수_pct', 50)), 1)},
+            {"subject": "집객시설", "value": round(_sf(res.get('집객시설_수_pct', 50), 50), 1),
+             "detail": f"{_si(res.get('집객시설_수_raw', 0)):,}개"},
+            {"subject": "직장인구", "value": round(_sf(res.get('총_직장_인구_수_pct', 50), 50), 1),
+             "detail": f"{_si(res.get('총_직장_인구_수_raw', 0)):,}명"},
+            {"subject": "소득금액", "value": round(_sf(res.get('월_평균_소득_금액_pct', 50), 50), 1),
+             "detail": f"월 {_si(res.get('월_평균_소득_금액_raw', 0)) // 10000:,}만원"},
+            {"subject": "가구수",   "value": round(_sf(res.get('총_가구_수_pct', 50), 50), 1),
+             "detail": f"{_si(res.get('총_가구_수_raw', 0)):,}가구"},
+            {"subject": "검색지수", "value": round(cafe_pct, 1),
+             "detail": f"서울 내 상위 {search_upper}%"},
+            {"subject": "지하철",   "value": round(_sf(res.get('지하철_노선_수_pct', 50), 50), 1),
+             "detail": subway_str},
         ],
     }
 
