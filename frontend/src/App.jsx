@@ -275,17 +275,32 @@ const App = () => {
                   <p className="text-slate-500 text-sm font-medium">검색 주소와 가장 인접한 분석 상권</p>
                 </div>
 
-                {/* Tea Shop Count */}
-                <div className="bg-slate-800/40 border border-slate-700 p-8 rounded-3xl flex flex-col items-center text-center group hover:border-amber-500/50 transition-all duration-300">
-                  <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-400 mb-6 group-hover:scale-110 transition-transform">
-                    <BarChart2 size={32} />
-                  </div>
-                  <h3 className="text-slate-400 font-bold mb-2">실제 찻집 수</h3>
-                  <div className="text-4xl font-black text-white mb-2">
-                    {result.tea_shop_count || 0} <span className="text-lg font-bold text-slate-500">개</span>
-                  </div>
-                  <p className="text-slate-500 text-sm font-medium">현재 영업 중인 경쟁 점포 수</p>
-                </div>
+                {/* Supply Shortage */}
+                {(() => {
+                  const pct = result.supply_shortage ?? 0;
+                  const color = pct >= 90 ? 'emerald' : pct >= 50 ? 'amber' : 'rose';
+                  const colorMap = {
+                    emerald: { border: 'hover:border-emerald-500/50', bg: 'bg-emerald-500/10', text: 'text-emerald-400', val: 'text-emerald-300' },
+                    amber:   { border: 'hover:border-amber-500/50',   bg: 'bg-amber-500/10',   text: 'text-amber-400',   val: 'text-amber-300' },
+                    rose:    { border: 'hover:border-rose-500/50',    bg: 'bg-rose-500/10',    text: 'text-rose-400',    val: 'text-rose-300' },
+                  };
+                  const c = colorMap[color];
+                  return (
+                    <div className={`bg-slate-800/40 border border-slate-700 p-8 rounded-3xl flex flex-col items-center text-center group ${c.border} transition-all duration-300`}>
+                      <div className={`w-14 h-14 ${c.bg} rounded-2xl flex items-center justify-center ${c.text} mb-6 group-hover:scale-110 transition-transform`}>
+                        <BarChart2 size={32} />
+                      </div>
+                      <h3 className="text-slate-400 font-bold mb-2">시장 공백 지수</h3>
+                      <div className={`text-4xl font-black ${c.val} mb-1`}>
+                        {pct}<span className="text-2xl font-bold text-slate-500">%</span>
+                      </div>
+                      <div className="bg-slate-700/50 rounded-xl px-4 py-1.5 text-xs text-slate-400 mb-2">
+                        찻집 경쟁 점포 <span className="text-white font-bold">{result.tea_shop_count ?? 0}개</span>
+                      </div>
+                      <p className="text-slate-500 text-xs">100%에 가까울수록 공급 공백 큼</p>
+                    </div>
+                  );
+                })()}
 
                 {/* Demand Factors Radar */}
                 <div className="bg-slate-800/40 border border-slate-700 p-6 rounded-3xl flex flex-col group hover:border-slate-500 transition-all duration-300">

@@ -152,6 +152,7 @@ def search_district(address: str = Query(..., description="검색할 주소")):
         "sales_prediction": sales_total,  # 하위 호환용 (기존 필드 유지)
         "cafe_store_count": int(cafe_store_count),
         "tea_shop_count": int(res['찻집수_latest']),
+        "supply_shortage": round(float(res.get('supply_shortage', 0)) * 100, 1),  # 0~1 → 0~100%
         "is_blue_ocean": bool(res.get('구조적블루오션', False)),
         "demand_factors": [
             {"subject": "집객시설", "value": round(float(res.get('집객시설_수_pct', 50)), 1)},
