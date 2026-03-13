@@ -1549,6 +1549,46 @@ OLS → β 계수 추정 → OOF 잔차 = 실제 - 예측 = 블루오션 신호
 
 ---
 
+## Q29: 수요 요인 레이더 차트 hover 시 실제값 표시 (2026-03-13)
+
+**문제:** 수요 요인 지수 레이더 차트에서 hover 시 각 카테고리의 실제값을 보여줘야 함.
+예: 지하철 → "5호선 굽은다리역, 5호선 명일역", 직장인구 → "554명"
+
+**원인 분석:**
+- `unified_ranking.csv`에 `_pct` 백분위 컬럼 없음 (모두 기본값 50 반환 중 — 레이더 차트 무의미 상태)
+- `station_coords.csv`에 호선 정보 없음
+
+**해결:**
+
+1. **44_add_demand_details.py** 신규:
+   - 카카오 keyword API → 219개 역 호선 수집 → `station_with_lines.csv`
+   - cKDTree 1.5km 내 역 목록 → `지하철_역_목록` 컬럼
+   - 최신 분기 raw 값 5개 → `api/unified_ranking.csv`에 추가
+
+2. **api/main.py**:
+   - 시작 시 `_raw` → `_pct` 백분위 자동 계산 (`rank(pct=True) × 100`)
+   - `demand_factors` 각 항목에 `detail` 필드 추가
+
+3. **frontend/src/App.jsx**:
+   - RadarChart `<Tooltip>` 추가 → hover 시 실제값 표시
+
+**결과 (굽은다리역 3번):**
+집객시설 14개(41.9), 직장인구 554명(41.5), 소득 월 312만원(76.1), 검색지수 상위 78%, 지하철 5호선 4개역(31.5)
+
+| 파일 | 변경 내용 |
+|------|---------|
+| `44_add_demand_details.py` | 신규 |
+| `station_with_lines.csv` | 신규 — 219개 역 호선 정보 |
+| `api/unified_ranking.csv` | 수정 — 6개 컬럼 추가 |
+| `api/main.py` | 수정 — _pct 계산 + detail 필드 |
+| `frontend/src/App.jsx` | 수정 — RadarChart Tooltip |
+
+---
+
+*로그 업데이트: Claude Sonnet 4.6 / 2026-03-13*
+
+---
+
 ## Q29. PPT 제작 시 필요한 파일들이 이름이 바뀐 것인지 확인 요청
 
 **배경:** PPT 제작 준비 중 아래 4개 파일이 없다고 해서 이름 변경 여부 확인 요청.
