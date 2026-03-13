@@ -12,10 +12,10 @@ import { SpeedInsights } from "@vercel/speed-insights/react"
 
 // 사분면 메타 정보
 const QUADRANT_META = {
-  'Q1_검증시장공백':   { color: '#10b981', short: 'Q1', label: '검증시장 공백',   desc: '매출↑ · 경쟁↓\n수요가 입증된 안전 진입지' },
-  'Q2_잠재수요미실현': { color: '#6366f1', short: 'Q2', label: '잠재수요 미실현', desc: '잠재수요↑ · 경쟁↓\n선점 가능 블루오션' },
-  'Q4_레드오션':      { color: '#f43f5e', short: 'Q4', label: '레드오션',        desc: '매출↑ · 경쟁↑\n이미 포화된 시장' },
-  'Q3_저성과포화':    { color: '#94a3b8', short: 'Q3', label: '저성과 포화',     desc: '매출↓ · 경쟁↑\n진입 비추천' },
+  'Q1_검증시장공백':   { color: '#10b981', short: 'Q1', label: '수요가 입증된 안전 진입지', desc: '매출↑ · 경쟁↓' },
+  'Q2_잠재수요미실현': { color: '#6366f1', short: 'Q2', label: '선점 가능한 블루오션',     desc: '잠재수요↑ · 경쟁↓' },
+  'Q4_레드오션':      { color: '#f43f5e', short: 'Q4', label: '이미 포화된 시장',         desc: '매출↑ · 경쟁↑' },
+  'Q3_저성과포화':    { color: '#94a3b8', short: 'Q3', label: '진입 비추천',              desc: '매출↓ · 경쟁↑' },
 };
 
 const QUADRANT_ORDER = ['Q1_검증시장공백', 'Q2_잠재수요미실현', 'Q4_레드오션', 'Q3_저성과포화'];
@@ -69,11 +69,11 @@ const BlueOceanTooltip = () => {
           <div className="space-y-1.5">
             <div className="flex items-start gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 mt-1 flex-shrink-0" />
-              <span><b className="text-emerald-400">블루오션 확인됨</b>: 찻집이 없는 상권(공급부족 지수 최대)이면서 Q2 잠재수요 미실현에 해당하는 곳</span>
+              <span><b className="text-emerald-400">블루오션</b>: Q1(수요가 입증된 안전 진입지) 또는 Q2(선점 가능한 블루오션) 상권</span>
             </div>
             <div className="flex items-start gap-2">
               <span className="w-2 h-2 rounded-full bg-slate-400 mt-1 flex-shrink-0" />
-              <span><b className="text-slate-400">일반</b>: 위 조건에 해당하지 않는 상권</span>
+              <span><b className="text-slate-400">일반</b>: Q3(진입 비추천) 또는 Q4(이미 포화된 시장) 상권</span>
             </div>
           </div>
           <div className="mt-2 pt-2 border-t border-slate-700 text-slate-500">
@@ -186,9 +186,7 @@ const App = () => {
                       <span className="text-3xl font-bold text-blue-200">위</span>
                     </div>
                     <div className="bg-black/20 backdrop-blur-md px-6 py-2 rounded-full text-sm font-black text-white border border-white/10 mb-10">
-                      {QUADRANT_META[result.quadrant]
-                        ? `${QUADRANT_META[result.quadrant].label} ${(result.total_ranked ?? 0).toLocaleString()}개 상권 중`
-                        : `${(result.total_ranked ?? 0).toLocaleString()}개 상권 중`}
+                      전체 {(result.total_ranked ?? 1036).toLocaleString()}개 상권 중
                     </div>
                   </>
                 ) : (
@@ -297,8 +295,14 @@ const App = () => {
                       <div className={`text-4xl font-black ${c.val} mb-1`}>
                         {ratio}<span className="text-2xl font-bold text-slate-500">%</span>
                       </div>
-                      <div className="bg-slate-700/50 rounded-xl px-3 py-1.5 text-xs text-slate-400 mb-2">
-                        카페 <span className="text-white font-bold">{cafeCnt}개</span> 중 찻집 <span className="text-white font-bold">{teaCnt}개</span>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="bg-slate-700/50 rounded-lg px-3 py-1 text-xs text-slate-400">
+                          카페 <span className="text-white font-bold">{cafeCnt}개</span>
+                        </div>
+                        <span className="text-slate-600 text-xs">vs</span>
+                        <div className="bg-slate-700/50 rounded-lg px-3 py-1 text-xs text-slate-400">
+                          찻집 <span className={`font-bold ${teaCnt === 0 ? 'text-emerald-400' : 'text-white'}`}>{teaCnt}개</span>
+                        </div>
                       </div>
                       <p className="text-slate-500 text-xs">
                         공급 공백 지수 <span className="text-slate-400 font-medium">{result.supply_shortage ?? 0}%</span>
@@ -347,10 +351,6 @@ const App = () => {
                         </div>
                       );
                     })}
-                    <div className="flex items-center gap-1.5 text-xs text-amber-400 font-bold">
-                      <div className="w-3 h-3 rounded-full bg-amber-400 flex-shrink-0" />
-                      검색 상권
-                    </div>
                   </div>
                 </div>
 

@@ -33,22 +33,15 @@ try:
     df_ranking['사분면'] = df_ranking['사분면'].fillna('일반 상권')
     df_ranking['블루오션_랭킹'] = pd.to_numeric(df_ranking['블루오션_랭킹'], errors='coerce').fillna(9999)
 
-    # 사분면별 내부 순위 계산 (사분면 분류와 일관된 순위 제공)
-    q1_mask = df_ranking['사분면'] == 'Q1_검증시장공백'
-    q2_mask = df_ranking['사분면'] == 'Q2_잠재수요미실현'
-    df_ranking.loc[q1_mask, 'q1_rank'] = \
-        df_ranking.loc[q1_mask, 'q1_score'].rank(ascending=False, method='min').astype(int)
-    df_ranking.loc[q2_mask, 'q2_rank'] = \
-        df_ranking.loc[q2_mask, 'q2_score'].rank(ascending=False, method='min').astype(int)
+    # 통합 순위 계산: Q1/Q2 중 더 유리한 점수 기준으로 전체 순위 산정
+    df_ranking['unified_score'] = df_ranking[['q1_score', 'q2_score']].max(axis=1)
+    df_ranking['unified_rank'] = df_ranking['unified_score'].rank(
+        ascending=False, method='min').astype(int)
 
 except Exception as e:
     print(f"Error loading data: {e}")
     df_map = pd.DataFrame(columns=['상권_코드', '상권_코드_명', '엑스좌표_값', '와이좌표_값'])
     df_ranking = pd.DataFrame()
-
-# 사분면별 총 수 (사전 계산)
-Q1_TOTAL = int((df_ranking['사분면'] == 'Q1_검증시장공백').sum()) if not df_ranking.empty else 0
-Q2_TOTAL = int((df_ranking['사분면'] == 'Q2_잠재수요미실현').sum()) if not df_ranking.empty else 0
 
 # KDTree 구성 — ranked 상권(unified_ranking.csv)만 사용해 항상 유효한 매핑 보장
 ranked_names = set(df_ranking['상권_코드_명']) if not df_ranking.empty else set()
@@ -129,23 +122,14 @@ def search_district(address: str = Query(..., description="검색할 주소")):
     sales_total = float(res['매출_latest']) / 3
     sales_per_store = float(res.get('cafe_revenue_per_store', res['매출_latest'] / cafe_store_count)) / 3
 
-    # 사분면에 맞는 내부 순위 계산
     quadrant = str(res['사분면'])
-    if quadrant == 'Q1_검증시장공백':
-        qrank = int(res['q1_rank']) if not pd.isna(res.get('q1_rank')) else None
-        qtotal = Q1_TOTAL
-    elif quadrant == 'Q2_잠재수요미실현':
-        qrank = int(res['q2_rank']) if not pd.isna(res.get('q2_rank')) else None
-        qtotal = Q2_TOTAL
-    else:
-        qrank = None
-        qtotal = None
+    urank = int(res['unified_rank']) if not pd.isna(res.get('unified_rank')) else None
 
     return {
         "address": address,
         "district_name": target_name,
-        "ranking": qrank,
-        "total_ranked": qtotal,
+        "ranking": urank,
+        "total_ranked": TOTAL_RANKED,
         "quadrant": quadrant,
         "sales_total": sales_total,       # 상권 내 카페음료 업종 전체 월매출 합산
         "sales_per_store": sales_per_store,  # 점포당 월평균 매출
@@ -153,7 +137,7 @@ def search_district(address: str = Query(..., description="검색할 주소")):
         "cafe_store_count": int(cafe_store_count),
         "tea_shop_count": int(res['찻집수_latest']),
         "supply_shortage": round(float(res.get('supply_shortage', 0)) * 100, 1),  # 0~1 → 0~100%
-        "is_blue_ocean": bool(res.get('구조적블루오션', False)),
+        "is_blue_ocean": quadrant in ('Q1_검증시장공백', 'Q2_잠재수요미실현'),
         "demand_factors": [
             {"subject": "집객시설", "value": round(float(res.get('집객시설_수_pct', 50)), 1)},
             {"subject": "직장인구", "value": round(float(res.get('총_직장_인구_수_pct', 50)), 1)},
