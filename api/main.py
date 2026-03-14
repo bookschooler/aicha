@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import re
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pyproj import Transformer
@@ -8,6 +9,21 @@ import requests
 import os
 from dotenv import load_dotenv
 load_dotenv()  # 로컬: api/.env 읽기 / Render: 환경변수로 대체됨
+
+_LINE_NAMES = r'(\d+호선|경의중앙선|신분당선|경춘선|수인분당선|공항철도|경강선|서해선)'
+
+def _format_subway(raw) -> str:
+    """지하철_역_목록 → '2호선 강남역, 9호선 신논현역' 형식으로 정리 (중복 제거)"""
+    if not raw or (isinstance(raw, float) and raw != raw):
+        return ''
+    tokens = re.findall(_LINE_NAMES + r'\s+(\S+역)', str(raw))
+    seen, result = set(), []
+    for line, station in tokens:
+        key = f"{line} {station}"
+        if key not in seen:
+            seen.add(key)
+            result.append(key)
+    return ', '.join(result)
 
 def _si(v, d=0):
     """안전한 int 변환 (NaN/None → d)"""
@@ -144,15 +160,11 @@ def search_district(address: str = Query(..., description="검색할 주소")):
     quadrant = str(res['사분면'])
     urank = int(res['unified_rank']) if not pd.isna(res.get('unified_rank')) else None
 
-    # 지하철 역 목록 (NaN 처리)
-    subway_raw = res.get('지하철_역_목록', '')
-    try:
-        subway_str = '' if pd.isna(subway_raw) else str(subway_raw).strip()
-    except Exception:
-        subway_str = str(subway_raw).strip() if subway_raw else ''
+    # 지하철 역 목록 → 'X호선 역명' 형식으로 정리
+    subway_str = _format_subway(res.get('지하철_역_목록', ''))
     if not subway_str:
-        n_lines = _si(res.get('지하철_노선_수', 0))
-        subway_str = f'{n_lines}개 노선' if n_lines > 0 else '인근 지하철 없음 (1.5km 내)'
+        n_lines = _si(res.get('지하철_노선_수_raw', res.get('지하철_노선_수', 0)))
+        subway_str = f'{n_lines}개 노선 (1.5km 내)' if n_lines > 0 else '인근 지하철 없음 (1.5km 내)'
 
     # 검색지수 상위 % (카페_검색지수_pct 는 0~100 백분위)
     cafe_pct = _sf(res.get('카페_검색지수_pct', 50), 50.0)
