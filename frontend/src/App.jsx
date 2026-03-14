@@ -363,6 +363,16 @@ const App = () => {
                       <p className="text-slate-500 text-xs">
                         공급 공백 지수 <span className="text-slate-400 font-medium">{result.supply_shortage ?? 0}%</span>
                       </p>
+                      {result.tea_shop_names?.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-slate-700/50 w-full text-left">
+                          <div className="text-slate-500 text-xs mb-1.5">이 상권의 찻집</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {result.tea_shop_names.map((name, i) => (
+                              <span key={i} className="bg-slate-700/60 text-slate-300 text-xs px-2 py-0.5 rounded-full">{name}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}

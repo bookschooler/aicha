@@ -58,6 +58,8 @@ try:
     df_map = pd.read_csv(os.path.join(DATA_DIR, "to_map.csv"))
     # 35_blueocean_ranking.csv 에서 복사된 파일 (1,038개 상권 전체 데이터)
     df_ranking = pd.read_csv(os.path.join(DATA_DIR, "unified_ranking.csv"))
+    # 찻집 위치 데이터 (가게명 조회용)
+    df_teashops = pd.read_csv(os.path.join(DATA_DIR, "teashops.csv"))
     
     # NaN 처리
     df_ranking['찻집수_latest'] = df_ranking['찻집수_latest'].fillna(0)
@@ -77,6 +79,7 @@ except Exception as e:
     print(f"Error loading data: {e}")
     df_map = pd.DataFrame(columns=['상권_코드', '상권_코드_명', '엑스좌표_값', '와이좌표_값'])
     df_ranking = pd.DataFrame()
+    df_teashops = pd.DataFrame(columns=['가게명', '상권_코드_명'])
 
 # KDTree 구성 — ranked 상권(unified_ranking.csv)만 사용해 항상 유효한 매핑 보장
 ranked_names = set(df_ranking['상권_코드_명']) if not df_ranking.empty else set()
@@ -170,6 +173,12 @@ def search_district(address: str = Query(..., description="검색할 주소")):
     cafe_pct = _sf(res.get('카페_검색지수_pct', 50), 50.0)
     search_upper = max(1, round(100 - cafe_pct))
 
+    # 해당 상권 찻집 이름 목록
+    tea_names = []
+    if not df_teashops.empty and '상권_코드_명' in df_teashops.columns:
+        matched = df_teashops[df_teashops['상권_코드_명'] == target_name]
+        tea_names = matched['가게명'].dropna().tolist()
+
     return {
         "address": address,
         "district_name": target_name,
@@ -181,6 +190,7 @@ def search_district(address: str = Query(..., description="검색할 주소")):
         "sales_prediction": sales_total,
         "cafe_store_count": int(cafe_store_count),
         "tea_shop_count": int(res['찻집수_latest']),
+        "tea_shop_names": tea_names,
         "supply_shortage": round(float(res.get('supply_shortage', 0)) * 100, 1),
         "is_blue_ocean": quadrant in ('Q1_검증시장공백', 'Q2_잠재수요미실현'),
         "demand_factors": [
