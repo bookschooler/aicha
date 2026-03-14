@@ -230,7 +230,7 @@ const App = () => {
             {/* 상단 카드 그리드 */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Main Ranking Card */}
-              <div className="lg:col-span-4 bg-gradient-to-br from-indigo-600 to-blue-800 p-10 rounded-[2.5rem] shadow-2xl flex flex-col items-center justify-center text-center relative overflow-hidden group">
+              <div className={`lg:col-span-4 p-10 rounded-[2.5rem] shadow-2xl flex flex-col items-center justify-center text-center relative overflow-hidden group bg-gradient-to-br ${result.is_blue_ocean ? 'from-sky-400 to-cyan-600' : 'from-rose-600 to-red-800'}`}>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-white/20 transition-all duration-700" />
                 <Award size={80} className="mb-6 text-yellow-300" />
                 <h2 className="text-xl font-bold text-blue-100 mb-2">블루오션 입지 순위</h2>
@@ -288,11 +288,11 @@ const App = () => {
                   {/* 블루오션 여부 */}
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-blue-100/70 font-medium">블루오션 여부</span>
+                      <span className="text-white/70 font-medium">블루오션</span>
                       <BlueOceanTooltip is_blue_ocean={result.is_blue_ocean} />
                     </div>
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-lg font-black text-sm ${result.is_blue_ocean ? 'bg-emerald-400 text-emerald-950' : 'bg-white/10 text-white'}`}>
-                      {result.is_blue_ocean ? '확인됨' : '일반'}
+                    <div className={`px-4 py-1 rounded-lg font-black text-lg ${result.is_blue_ocean ? 'bg-white/20 text-white' : 'bg-white/10 text-white/60'}`}>
+                      {result.is_blue_ocean ? 'O' : 'X'}
                     </div>
                   </div>
                 </div>
