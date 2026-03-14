@@ -1629,3 +1629,53 @@ OLS → β 계수 추정 → OOF 잔차 = 실제 - 예측 = 블루오션 신호
 ---
 
 *로그 업데이트: Claude Sonnet 4.6 / 2026-03-09*
+
+---
+
+# 추가 대화 — 2026-03-14 (Render 배포 수정 + 웹 앱 UI 개선)
+
+## Q31. Render 배포 타임아웃 + 수요 요인 실제값 표시 + UI 개선
+
+### 결정 29 — Render startup 연산 제거 (precompute_pct.py)
+
+**문제:** `api/main.py` 시작 시 `rank(pct=True)` × 5 + `apply(_count_lines)` → Render 90초 헬스체크 초과 → 배포 실패.
+
+**해결:** `precompute_pct.py` 유틸리티로 `_pct` 컬럼 6개를 `api/unified_ranking.csv`에 선계산 저장.
+startup에서 rank/apply 완전 제거. 커밋 `e633974`, `599ea9b`.
+
+### 결정 30 — 지하철 역명 파서 + tooltip 줄바꿈
+
+`_format_subway()` 함수: regex로 `X호선 역명` 쌍 추출 → 중복 제거.
+지하철 tooltip에서 `, ` 기준 split → 한 줄씩 표시. 커밋 `5f2d194`, `0320aa7`.
+
+### 결정 31 — 찻집 이름 hover tooltip
+
+`api/teashops.csv` (41_tableau_teashops.csv 복사, 246개). API `/search` 응답에 `tea_shop_names` 추가.
+프론트에서 `group/teashop` Tailwind variant → hover 시 찻집 이름 목록. 커밋 `87eb733`.
+
+### 결정 32 — 블루오션 카드 색상/라벨 변경
+
+- 블루오션 O: `from-sky-400 to-cyan-600`
+- 블루오션 X: `from-rose-600 to-red-800`
+- "블루오션 여부" → "블루오션", "확인됨"/"일반" → "O"/"X". 커밋 `9bf1c55`.
+
+### ⚠️ 교훈: UI 기능 변경 시 반드시 사전 허락
+
+hover 기능 무단 제거 후 항상 보이는 표로 교체 → 사용자 피드백 "누가 마음대로 hover 기능 없애래. 나한테 항상 허락 받고 고쳐."
+커밋 `fa23ca2`(잘못됨) → `e2ecb9b`(복구).
+
+---
+
+## 생성/수정 파일 목록
+
+| 파일 | 변경 내용 |
+|------|---------|
+| `api/main.py` | startup rank 제거, `_format_subway()`, `tea_shop_names`, `detail` 필드 |
+| `api/unified_ranking.csv` | `_pct` 컬럼 6개 선계산 추가 |
+| `api/teashops.csv` | 신규 (41_tableau_teashops.csv 복사) |
+| `precompute_pct.py` | 신규 유틸리티 스크립트 |
+| `frontend/src/App.jsx` | hover tooltip 복구, 지하철 줄바꿈, 카드 색상/라벨 |
+
+---
+
+*로그 업데이트: Claude Sonnet 4.6 / 2026-03-14*
