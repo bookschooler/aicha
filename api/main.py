@@ -117,6 +117,59 @@ def get_coords_from_kakao(address: str):
 def read_root():
     return {"status": "online", "message": "BlueOcean Finder API is running"}
 
+def _make_result(res, target_name: str, address: str = "") -> dict:
+    """ranking_row Series → /search 응답 딕셔너리 생성"""
+    cafe_store_count = float(res.get('카페음료_점포수', 1)) or 1
+    sales_total = float(res['매출_latest']) / 3
+    sales_per_store = float(res.get('cafe_revenue_per_store', res['매출_latest'] / cafe_store_count)) / 3
+
+    quadrant = str(res['사분면'])
+    urank = int(res['unified_rank']) if not pd.isna(res.get('unified_rank')) else None
+
+    subway_str = _format_subway(res.get('지하철_역_목록', ''))
+    if not subway_str:
+        n_lines = _si(res.get('지하철_노선_수_raw', res.get('지하철_노선_수', 0)))
+        subway_str = f'{n_lines}개 노선 (1.5km 내)' if n_lines > 0 else '인근 지하철 없음 (1.5km 내)'
+
+    cafe_pct = _sf(res.get('카페_검색지수_pct', 50), 50.0)
+    search_upper = max(1, round(100 - cafe_pct))
+
+    tea_names = []
+    if not df_teashops.empty and '상권_코드_명' in df_teashops.columns:
+        matched = df_teashops[df_teashops['상권_코드_명'] == target_name]
+        tea_names = matched['가게명'].dropna().tolist()
+
+    return {
+        "address": address or target_name,
+        "district_name": target_name,
+        "ranking": urank,
+        "total_ranked": TOTAL_RANKED,
+        "quadrant": quadrant,
+        "sales_total": sales_total,
+        "sales_per_store": sales_per_store,
+        "sales_prediction": sales_total,
+        "cafe_store_count": int(cafe_store_count),
+        "tea_shop_count": int(res['찻집수_latest']),
+        "tea_shop_names": tea_names,
+        "supply_shortage": round(float(res.get('supply_shortage', 0)) * 100, 1),
+        "is_blue_ocean": quadrant in ('Q1_검증시장공백', 'Q2_잠재수요미실현'),
+        "demand_factors": [
+            {"subject": "집객시설", "value": round(_sf(res.get('집객시설_수_pct', 50), 50), 1),
+             "detail": f"{_si(res.get('집객시설_수_raw', 0)):,}개"},
+            {"subject": "직장인구", "value": round(_sf(res.get('총_직장_인구_수_pct', 50), 50), 1),
+             "detail": f"{_si(res.get('총_직장_인구_수_raw', 0)):,}명"},
+            {"subject": "소득금액", "value": round(_sf(res.get('월_평균_소득_금액_pct', 50), 50), 1),
+             "detail": f"월 {_si(res.get('월_평균_소득_금액_raw', 0)) // 10000:,}만원"},
+            {"subject": "가구수",   "value": round(_sf(res.get('총_가구_수_pct', 50), 50), 1),
+             "detail": f"{_si(res.get('총_가구_수_raw', 0)):,}가구"},
+            {"subject": "검색지수", "value": round(cafe_pct, 1),
+             "detail": f"서울 내 상위 {search_upper}%"},
+            {"subject": "지하철",   "value": round(_sf(res.get('지하철_노선_수_pct', 50), 50), 1),
+             "detail": subway_str},
+        ],
+    }
+
+
 @app.get("/search")
 def search_district(address: str = Query(..., description="검색할 주소")):
     if tree is None:
@@ -155,59 +208,22 @@ def search_district(address: str = Query(..., description="검색할 주소")):
         }
 
     res = ranking_row.iloc[0]
-    # 분기 매출 → 월 환산
-    cafe_store_count = float(res.get('카페음료_점포수', 1)) or 1
-    sales_total = float(res['매출_latest']) / 3
-    sales_per_store = float(res.get('cafe_revenue_per_store', res['매출_latest'] / cafe_store_count)) / 3
+    return _make_result(res, target_name, address)
 
-    quadrant = str(res['사분면'])
-    urank = int(res['unified_rank']) if not pd.isna(res.get('unified_rank')) else None
+@app.get("/rank/{n}")
+def search_by_rank(n: int):
+    """순위 번호(1~TOTAL_RANKED)로 상권 조회"""
+    if df_ranking.empty:
+        raise HTTPException(status_code=500, detail="Data not loaded.")
+    if n < 1 or n > TOTAL_RANKED:
+        raise HTTPException(status_code=404, detail=f"순위는 1~{TOTAL_RANKED} 범위로 입력해 주세요.")
+    row = df_ranking[df_ranking['unified_rank'] == n]
+    if row.empty:
+        raise HTTPException(status_code=404, detail=f"{n}번 순위 상권을 찾을 수 없습니다.")
+    res = row.iloc[0]
+    target_name = str(res['상권_코드_명'])
+    return _make_result(res, target_name)
 
-    # 지하철 역 목록 → 'X호선 역명' 형식으로 정리
-    subway_str = _format_subway(res.get('지하철_역_목록', ''))
-    if not subway_str:
-        n_lines = _si(res.get('지하철_노선_수_raw', res.get('지하철_노선_수', 0)))
-        subway_str = f'{n_lines}개 노선 (1.5km 내)' if n_lines > 0 else '인근 지하철 없음 (1.5km 내)'
-
-    # 검색지수 상위 % (카페_검색지수_pct 는 0~100 백분위)
-    cafe_pct = _sf(res.get('카페_검색지수_pct', 50), 50.0)
-    search_upper = max(1, round(100 - cafe_pct))
-
-    # 해당 상권 찻집 이름 목록
-    tea_names = []
-    if not df_teashops.empty and '상권_코드_명' in df_teashops.columns:
-        matched = df_teashops[df_teashops['상권_코드_명'] == target_name]
-        tea_names = matched['가게명'].dropna().tolist()
-
-    return {
-        "address": address,
-        "district_name": target_name,
-        "ranking": urank,
-        "total_ranked": TOTAL_RANKED,
-        "quadrant": quadrant,
-        "sales_total": sales_total,
-        "sales_per_store": sales_per_store,
-        "sales_prediction": sales_total,
-        "cafe_store_count": int(cafe_store_count),
-        "tea_shop_count": int(res['찻집수_latest']),
-        "tea_shop_names": tea_names,
-        "supply_shortage": round(float(res.get('supply_shortage', 0)) * 100, 1),
-        "is_blue_ocean": quadrant in ('Q1_검증시장공백', 'Q2_잠재수요미실현'),
-        "demand_factors": [
-            {"subject": "집객시설", "value": round(_sf(res.get('집객시설_수_pct', 50), 50), 1),
-             "detail": f"{_si(res.get('집객시설_수_raw', 0)):,}개"},
-            {"subject": "직장인구", "value": round(_sf(res.get('총_직장_인구_수_pct', 50), 50), 1),
-             "detail": f"{_si(res.get('총_직장_인구_수_raw', 0)):,}명"},
-            {"subject": "소득금액", "value": round(_sf(res.get('월_평균_소득_금액_pct', 50), 50), 1),
-             "detail": f"월 {_si(res.get('월_평균_소득_금액_raw', 0)) // 10000:,}만원"},
-            {"subject": "가구수",   "value": round(_sf(res.get('총_가구_수_pct', 50), 50), 1),
-             "detail": f"{_si(res.get('총_가구_수_raw', 0)):,}가구"},
-            {"subject": "검색지수", "value": round(cafe_pct, 1),
-             "detail": f"서울 내 상위 {search_upper}%"},
-            {"subject": "지하철",   "value": round(_sf(res.get('지하철_노선_수_pct', 50), 50), 1),
-             "detail": subway_str},
-        ],
-    }
 
 @app.get("/scatter")
 def get_scatter_data():

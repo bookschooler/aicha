@@ -124,8 +124,13 @@ const App = () => {
 
   const doSearch = useCallback(async (addr) => {
     setLoading(true); setResult(null); setError(null);
+    const trimmed = addr.trim();
+    const isRank = /^\d+$/.test(trimmed);
+    const url = isRank
+      ? `${apiUrl}/rank/${trimmed}`
+      : `${apiUrl}/search?address=${encodeURIComponent(addr)}`;
     try {
-      const response = await axios.get(`${apiUrl}/search?address=${encodeURIComponent(addr)}`);
+      const response = await axios.get(url);
       setRetrying(false);
       clearInterval(retryTimerRef.current);
       setResult(response.data);
@@ -196,7 +201,7 @@ const App = () => {
               <input
                 type="text" value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="분석하고 싶은 주소를 입력하세요 (구 단위 포함 권장)"
+                placeholder="서울 주소 입력 (구 단위 포함) 또는 순위 번호 (예: 5)"
                 className="w-full bg-transparent border-none rounded-xl py-5 pl-14 pr-4 text-lg focus:outline-none focus:ring-0 placeholder:text-slate-600 font-medium"
               />
             </div>
