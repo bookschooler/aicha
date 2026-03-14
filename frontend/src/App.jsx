@@ -389,23 +389,29 @@ const App = () => {
                     <Info size={18} />
                     수요 요인 지수 <span className="text-xs font-normal text-slate-600">(서울 내 백분위)</span>
                   </h3>
-                  <div className="h-52 w-full">
+                  <div className="h-56 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart cx="50%" cy="50%" outerRadius="70%" data={result.demand_factors}>
+                      <RadarChart cx="50%" cy="50%" outerRadius="75%" data={result.demand_factors}>
                         <PolarGrid stroke="#334155" />
                         <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
                         <Radar name="상권 지수" dataKey="value" stroke="#6366f1" strokeWidth={3} fill="#6366f1" fillOpacity={0.3} />
+                        <Tooltip
+                          cursor={false}
+                          content={({ active, payload }) => {
+                            if (!active || !payload?.length) return null;
+                            const item = payload[0]?.payload;
+                            if (!item) return null;
+                            return (
+                              <div className="bg-slate-900 border border-indigo-500/50 rounded-xl p-3 shadow-2xl" style={{ maxWidth: 220 }}>
+                                <div className="font-bold text-indigo-400 text-xs mb-1.5">{item.subject}</div>
+                                <div className="text-white text-sm font-semibold leading-snug">{item.detail ?? '-'}</div>
+                                <div className="text-slate-500 text-xs mt-1.5">서울 내 {item.value}백분위</div>
+                              </div>
+                            );
+                          }}
+                        />
                       </RadarChart>
                     </ResponsiveContainer>
-                  </div>
-                  {/* 수요 요인 실제값 목록 — hover 의존 없이 항상 표시 */}
-                  <div className="mt-3 grid grid-cols-2 gap-1">
-                    {result.demand_factors.map(item => (
-                      <div key={item.subject} className="flex items-center justify-between px-2.5 py-1.5 bg-slate-900/40 rounded-lg">
-                        <span className="text-slate-500 text-[11px]">{item.subject}</span>
-                        <span className="text-white text-[11px] font-semibold ml-2 truncate max-w-[110px] text-right">{item.detail ?? '-'}</span>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
