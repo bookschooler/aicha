@@ -54,34 +54,8 @@ try:
     df_ranking['unified_rank'] = df_ranking['unified_score'].rank(
         ascending=False, method='min').astype(int)
 
-    # 수요 변수 백분위 계산 (0~100, 높을수록 상위)
-    import re as _re
-    _raw_to_pct = {
-        '집객시설_수_raw':       '집객시설_수_pct',
-        '총_직장_인구_수_raw':   '총_직장_인구_수_pct',
-        '월_평균_소득_금액_raw': '월_평균_소득_금액_pct',
-        '총_가구_수_raw':       '총_가구_수_pct',
-        '카페_검색지수_raw':     '카페_검색지수_pct',
-    }
-    for raw_col, pct_col in _raw_to_pct.items():
-        if raw_col in df_ranking.columns:
-            df_ranking[pct_col] = df_ranking[raw_col].rank(pct=True, na_option='keep') * 100
-        else:
-            df_ranking[pct_col] = 50.0
-
-    def _count_lines(subway_str):
-        if not subway_str or (isinstance(subway_str, float) and subway_str != subway_str):
-            return 0
-        lines = set(_re.findall(
-            r'(\d+호선|경의중앙선|신분당선|경춘선|수인분당선|공항철도|경강선|서해선)',
-            str(subway_str)
-        ))
-        return len(lines)
-
-    df_ranking['지하철_노선_수_raw'] = df_ranking['지하철_역_목록'].apply(_count_lines) \
-        if '지하철_역_목록' in df_ranking.columns else 0
-    df_ranking['지하철_노선_수_pct'] = df_ranking['지하철_노선_수_raw'].rank(
-        pct=True, na_option='keep') * 100
+    # _pct 컬럼은 unified_ranking.csv에 미리 저장됨 (precompute_pct.py로 생성)
+    # startup 시 rank 연산 불필요 → Render 콜드 스타트 타임아웃 방지
 
 except Exception as e:
     print(f"Error loading data: {e}")
