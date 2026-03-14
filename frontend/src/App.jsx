@@ -402,9 +402,14 @@ const App = () => {
                             const item = payload[0]?.payload;
                             if (!item) return null;
                             return (
-                              <div className="bg-slate-900 border border-indigo-500/50 rounded-xl p-3 shadow-2xl" style={{ maxWidth: 220 }}>
+                              <div className="bg-slate-900 border border-indigo-500/50 rounded-xl p-3 shadow-2xl" style={{ maxWidth: 240 }}>
                                 <div className="font-bold text-indigo-400 text-xs mb-1.5">{item.subject}</div>
-                                <div className="text-white text-sm font-semibold leading-snug">{item.detail ?? '-'}</div>
+                                {item.subject === '지하철' && item.detail && item.detail !== '-'
+                                  ? item.detail.split(', ').map((s, i) => (
+                                      <div key={i} className="text-white text-sm font-semibold leading-snug">{s}</div>
+                                    ))
+                                  : <div className="text-white text-sm font-semibold leading-snug">{item.detail ?? '-'}</div>
+                                }
                                 <div className="text-slate-500 text-xs mt-1.5">서울 내 {item.value}백분위</div>
                               </div>
                             );
