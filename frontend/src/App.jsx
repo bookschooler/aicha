@@ -356,23 +356,29 @@ const App = () => {
                           카페 <span className="text-white font-bold">{cafeCnt}개</span>
                         </div>
                         <span className="text-slate-600 text-xs">vs</span>
-                        <div className="bg-slate-700/50 rounded-lg px-3 py-1 text-xs text-slate-400">
-                          찻집 <span className={`font-bold ${teaCnt === 0 ? 'text-emerald-400' : 'text-white'}`}>{teaCnt}개</span>
-                        </div>
+                        {/* 찻집 N개 — 이름 있으면 hover tooltip */}
+                        {result.tea_shop_names?.length > 0 ? (
+                          <div className="relative group/teashop">
+                            <div className="bg-slate-700/50 rounded-lg px-3 py-1 text-xs text-slate-400 cursor-default flex items-center gap-1">
+                              찻집 <span className="font-bold text-white">{teaCnt}개</span>
+                              <span className="text-slate-600 text-[10px]">▴</span>
+                            </div>
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 hidden group-hover/teashop:block bg-slate-900 border border-slate-600 rounded-xl p-3 shadow-2xl min-w-[140px] text-left whitespace-nowrap">
+                              <div className="text-slate-500 text-xs mb-1.5">이 상권의 찻집</div>
+                              {result.tea_shop_names.map((name, i) => (
+                                <div key={i} className="text-white text-xs py-0.5">· {name}</div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-slate-700/50 rounded-lg px-3 py-1 text-xs text-slate-400">
+                            찻집 <span className="font-bold text-emerald-400">{teaCnt}개</span>
+                          </div>
+                        )}
                       </div>
                       <p className="text-slate-500 text-xs">
                         공급 공백 지수 <span className="text-slate-400 font-medium">{result.supply_shortage ?? 0}%</span>
                       </p>
-                      {result.tea_shop_names?.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-slate-700/50 w-full text-left">
-                          <div className="text-slate-500 text-xs mb-1.5">이 상권의 찻집</div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {result.tea_shop_names.map((name, i) => (
-                              <span key={i} className="bg-slate-700/60 text-slate-300 text-xs px-2 py-0.5 rounded-full">{name}</span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   );
                 })()}
@@ -383,29 +389,23 @@ const App = () => {
                     <Info size={18} />
                     수요 요인 지수 <span className="text-xs font-normal text-slate-600">(서울 내 백분위)</span>
                   </h3>
-                  <div className="h-56 w-full">
+                  <div className="h-52 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart cx="50%" cy="50%" outerRadius="75%" data={result.demand_factors}>
+                      <RadarChart cx="50%" cy="50%" outerRadius="70%" data={result.demand_factors}>
                         <PolarGrid stroke="#334155" />
                         <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
                         <Radar name="상권 지수" dataKey="value" stroke="#6366f1" strokeWidth={3} fill="#6366f1" fillOpacity={0.3} />
-                        <Tooltip
-                          cursor={false}
-                          content={({ active, payload }) => {
-                            if (!active || !payload?.length) return null;
-                            const item = payload[0]?.payload;
-                            if (!item) return null;
-                            return (
-                              <div className="bg-slate-900 border border-indigo-500/50 rounded-xl p-3 shadow-2xl" style={{ maxWidth: 220 }}>
-                                <div className="font-bold text-indigo-400 text-xs mb-1.5">{item.subject}</div>
-                                <div className="text-white text-sm font-semibold leading-snug">{item.detail ?? '-'}</div>
-                                <div className="text-slate-500 text-xs mt-1.5">서울 내 {item.value}백분위</div>
-                              </div>
-                            );
-                          }}
-                        />
                       </RadarChart>
                     </ResponsiveContainer>
+                  </div>
+                  {/* 수요 요인 실제값 목록 — hover 의존 없이 항상 표시 */}
+                  <div className="mt-3 grid grid-cols-2 gap-1">
+                    {result.demand_factors.map(item => (
+                      <div key={item.subject} className="flex items-center justify-between px-2.5 py-1.5 bg-slate-900/40 rounded-lg">
+                        <span className="text-slate-500 text-[11px]">{item.subject}</span>
+                        <span className="text-white text-[11px] font-semibold ml-2 truncate max-w-[110px] text-right">{item.detail ?? '-'}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
