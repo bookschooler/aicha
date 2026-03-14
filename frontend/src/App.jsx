@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { Search, MapPin, TrendingUp, BarChart2, Award, Info, Activity, HelpCircle } from 'lucide-react';
+import { Search, MapPin, TrendingUp, BarChart2, Award, Info, Activity, HelpCircle, Loader2 } from 'lucide-react';
 import {
   ResponsiveContainer,
   RadarChart, PolarGrid, PolarAngleAxis, Radar,
@@ -93,6 +93,10 @@ const App = () => {
   const [error, setError] = useState(null);
   const [serverStatus, setServerStatus] = useState('checking');
   const [scatterData, setScatterData] = useState(null);
+  const [retrying, setRetrying] = useState(false);
+  const [retryIn, setRetryIn] = useState(0);
+  const retryTimerRef = useRef(null);
+  const pendingAddressRef = useRef('');
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -108,22 +112,59 @@ const App = () => {
     axios.get(`${apiUrl}/scatter`).then(r => setScatterData(r.data)).catch(() => {});
   }, [apiUrl]);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!address) return;
+  // 타이머 정리
+  useEffect(() => () => clearInterval(retryTimerRef.current), []);
+
+  const cancelRetry = useCallback(() => {
+    clearInterval(retryTimerRef.current);
+    setRetrying(false);
+    setRetryIn(0);
+    setLoading(false);
+  }, []);
+
+  const doSearch = useCallback(async (addr) => {
     setLoading(true); setResult(null); setError(null);
     try {
-      const response = await axios.get(`${apiUrl}/search?address=${encodeURIComponent(address)}`);
+      const response = await axios.get(`${apiUrl}/search?address=${encodeURIComponent(addr)}`);
+      setRetrying(false);
+      clearInterval(retryTimerRef.current);
       setResult(response.data);
-      // 서버 슬립으로 scatter 데이터가 없으면 검색 성공 후 재요청
+      setServerStatus('online');
       if (!scatterData) {
         axios.get(`${apiUrl}/scatter`).then(r => setScatterData(r.data)).catch(() => {});
       }
     } catch (err) {
-      const msg = err.response?.data?.detail;
-      setError(msg || '상권 정보를 불러오는 데 실패했습니다. 서버가 깨어나는 중일 수 있으니 잠시 후 다시 시도해 주세요.');
+      const isNetworkError = !err.response;
+      if (isNetworkError) {
+        // 콜드 스타트: 20초 카운트다운 후 자동 재시도
+        setRetrying(true);
+        setServerStatus('offline');
+        let countdown = 20;
+        setRetryIn(countdown);
+        clearInterval(retryTimerRef.current);
+        retryTimerRef.current = setInterval(() => {
+          countdown -= 1;
+          setRetryIn(countdown);
+          if (countdown <= 0) {
+            clearInterval(retryTimerRef.current);
+            doSearch(pendingAddressRef.current);
+          }
+        }, 1000);
+      } else {
+        setRetrying(false);
+        const msg = err.response?.data?.detail;
+        setError(msg || '분석 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      }
     } finally { setLoading(false); }
-  };
+  }, [apiUrl, scatterData]);
+
+  const handleSearch = useCallback(async (e) => {
+    e.preventDefault();
+    if (!address) return;
+    pendingAddressRef.current = address;
+    cancelRetry();
+    doSearch(address);
+  }, [address, doSearch, cancelRetry]);
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-100 p-4 md:p-12 font-sans selection:bg-blue-500/30">
@@ -159,12 +200,23 @@ const App = () => {
                 className="w-full bg-transparent border-none rounded-xl py-5 pl-14 pr-4 text-lg focus:outline-none focus:ring-0 placeholder:text-slate-600 font-medium"
               />
             </div>
-            <button type="submit" disabled={loading}
+            <button type="submit" disabled={loading || retrying}
               className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 text-white px-10 py-4 md:py-0 rounded-xl font-bold text-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95">
-              {loading ? '데이터 분석 중...' : '분석하기'}
+              {loading ? '데이터 분석 중...' : retrying ? '서버 시작 중...' : '분석하기'}
             </button>
           </form>
         </section>
+
+        {retrying && (
+          <div className="bg-amber-900/20 border border-amber-500/50 text-amber-200 p-5 rounded-2xl mb-8 flex items-center gap-4">
+            <Loader2 size={22} className="animate-spin text-amber-400 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium">분석 서버를 시작하는 중입니다...</p>
+              <p className="text-xs mt-0.5 text-amber-400/70">{retryIn}초 후 자동 재시도 · 처음 요청 시 최대 40초 소요</p>
+            </div>
+            <button onClick={cancelRetry} className="text-amber-400/60 hover:text-amber-400 text-xs underline flex-shrink-0">취소</button>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-900/20 border border-red-500/50 text-red-200 p-5 rounded-2xl mb-8 flex items-center gap-4">
