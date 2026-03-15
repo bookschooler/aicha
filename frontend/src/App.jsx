@@ -524,11 +524,15 @@ const App = () => {
         )}
 
         {!result && !loading && (
-          <div className="flex flex-col items-center justify-center py-32 text-slate-700 animate-pulse">
-            <div className="w-32 h-32 bg-slate-800/50 rounded-full flex items-center justify-center mb-6">
-              <MapPin size={64} className="opacity-30" />
-            </div>
-            <p className="text-xl font-bold opacity-30">분석을 위해 주소를 입력해 주세요.</p>
+          <div className="flex flex-col items-center justify-center py-16 select-none">
+            <img
+              src="https://cdn.undraw.co/illustrations/mint-tea_gjmb.svg"
+              alt="찻집 일러스트"
+              className="w-64 h-64 opacity-70 mb-6"
+              draggable="false"
+            />
+            <p className="text-lg font-semibold text-slate-500 mb-1">서울 찻집 블루오션 상권 찾기</p>
+            <p className="text-sm text-slate-600">주소 또는 순위 번호를 입력하면 인접 상권을 분석해드려요.</p>
           </div>
         )}
       </main>
