@@ -67,10 +67,9 @@ try:
     df_ranking['사분면'] = df_ranking['사분면'].fillna('일반 상권')
     df_ranking['블루오션_랭킹'] = pd.to_numeric(df_ranking['블루오션_랭킹'], errors='coerce').fillna(9999)
 
-    # 통합 순위 계산: Q1/Q2 중 더 유리한 점수 기준으로 전체 순위 산정
-    df_ranking['unified_score'] = df_ranking[['q1_score', 'q2_score']].max(axis=1)
-    df_ranking['unified_rank'] = df_ranking['unified_score'].rank(
-        ascending=False, method='min').astype(int)
+    # 블루오션_랭킹: unified_ranking.csv에 저장된 값 그대로 사용
+    # (35_blueocean_smoothing.py에서 통합 스코어 기준으로 산정됨)
+    df_ranking['unified_rank'] = df_ranking['블루오션_랭킹']
 
     # _pct 컬럼은 unified_ranking.csv에 미리 저장됨 (precompute_pct.py로 생성)
     # startup 시 rank 연산 불필요 → Render 콜드 스타트 타임아웃 방지
