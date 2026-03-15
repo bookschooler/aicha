@@ -526,7 +526,7 @@ const App = () => {
         {!result && !loading && (
           <div className="flex flex-col items-center justify-center py-16 select-none">
             <img
-              src="https://cdn.undraw.co/illustrations/mint-tea_gjmb.svg"
+              src="/mint-tea.svg"
               alt="찻집 일러스트"
               className="w-64 h-64 opacity-70 mb-6"
               draggable="false"
