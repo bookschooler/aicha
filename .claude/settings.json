@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(npm run build:*)",
+      "Bash(echo:*)",
+      "Bash(git check-ignore:*)",
+      "mcp__claude_ai_Gamma__generate",
+      "mcp__claude_ai_Gamma__get_generation_status",
+      "Bash(grep:*)",
+      "Bash(git ls-files:*)",
+      "Bash(code:*)",
+      "Bash(curl:*)",
+      "Bash(git mv:*)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\user\\Desktop\\STA_track\\pypjt\\aicha"
+    ]
+  }
+}
