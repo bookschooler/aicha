@@ -56,15 +56,17 @@ df = pd.read_csv(IN_PATH, encoding='utf-8-sig')
 logs.append(f"입력: {df.shape[0]}개 상권")
 logs.append(f"컬럼: {list(df.columns)}")
 
-# 카페음료_점포수 병합 (OOF 잔차 파일 → 최신 분기)
+# 카페음료_점포수 병합 (OOF 잔차 파일 → 9분기 평균, NaN 제외)
+# 최신 분기값은 데이터 누락/집계 지연으로 불안정할 수 있음 → 평균값이 더 안정적
 df_oof = pd.read_csv(IN_OOF, encoding='utf-8-sig')
-latest_q = df_oof['기준_년분기_코드'].max()
 cafe_store = (
-    df_oof[df_oof['기준_년분기_코드'] == latest_q]
-    [['상권_코드', '카페음료_점포수']]
+    df_oof.groupby('상권_코드')['카페음료_점포수']
+    .mean()  # NaN은 자동 제외
+    .reset_index()
+    .rename(columns={'카페음료_점포수': '카페음료_점포수'})
 )
 df = df.merge(cafe_store, on='상권_코드', how='left')
-logs.append(f"카페음료_점포수 병합 완료 (최신분기: {latest_q})")
+logs.append(f"카페음료_점포수 병합 완료 (9분기 평균, NaN 제외)")
 
 # ─────────────────────────────────────────────
 # 2. 공급 지수 고도화
