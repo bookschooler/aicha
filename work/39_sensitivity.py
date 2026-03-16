@@ -7,8 +7,7 @@
 #
 # 입력: 34_district_residuals.csv, 34_oof_residuals.csv
 # 출력:
-#   39_sensitivity_q1.csv     - Q1 Top5 × 가중치 조합 매트릭스
-#   39_sensitivity_q2.csv     - Q2 Top5 × 가중치 조합 매트릭스
+#   39_sensitivity_results.csv - Q1+Q2 Top5 × 가중치 조합 통합 매트릭스
 #   39_sensitivity_overlap.png - 기준(0.5/0.5) 대비 상위권 일치율 시각화
 #   39_sensitivity_log.txt    - 실행 로그
 
@@ -22,10 +21,9 @@ import os
 BASE     = os.path.dirname(os.path.abspath(__file__))
 IN_DIST  = os.path.join(BASE, '34_district_residuals.csv')
 IN_OOF   = os.path.join(BASE, '34_oof_residuals.csv')
-OUT_Q1   = os.path.join(BASE, '39_sensitivity_q1.csv')
-OUT_Q2   = os.path.join(BASE, '39_sensitivity_q2.csv')
-OUT_PLOT = os.path.join(BASE, '39_sensitivity_overlap.png')
-OUT_LOG  = os.path.join(BASE, '39_sensitivity_log.txt')
+OUT_RESULTS = os.path.join(BASE, '39_sensitivity_results.csv')
+OUT_PLOT    = os.path.join(BASE, '39_sensitivity_overlap.png')
+OUT_LOG     = os.path.join(BASE, '39_sensitivity_log.txt')
 
 logs = []
 
@@ -127,12 +125,12 @@ for w1, w2 in weights:
     logs.append(f"{label:<30} {str(q1_top5):<60} {q1_overlap}/5       {str(q2_top5):<60} {q2_overlap}/5{marker}")
 
 # ─────────────────────────────────────────────
-# 4. 저장
+# 4. 저장 (Q1+Q2 통합 CSV)
 # ─────────────────────────────────────────────
-df_q1_res = pd.DataFrame(results_q1)
-df_q2_res = pd.DataFrame(results_q2)
-df_q1_res.to_csv(OUT_Q1, index=False, encoding='utf-8-sig')
-df_q2_res.to_csv(OUT_Q2, index=False, encoding='utf-8-sig')
+df_q1_res = pd.DataFrame(results_q1).rename(columns={f'{i+1}위': f'Q1_{i+1}위' for i in range(TOP_N)})
+df_q2_res = pd.DataFrame(results_q2).rename(columns={f'{i+1}위': f'Q2_{i+1}위' for i in range(TOP_N)})
+df_results = df_q1_res.merge(df_q2_res.drop(columns=['가중치']), left_index=True, right_index=True)
+df_results.to_csv(OUT_RESULTS, index=False, encoding='utf-8-sig')
 
 # ─────────────────────────────────────────────
 # 5. 시각화: 기준 대비 일치율
@@ -204,6 +202,5 @@ with open(OUT_LOG, 'w', encoding='utf-8') as f:
     f.write(log_text)
 
 print(log_text)
-print(f"\n[저장] {OUT_Q1}")
-print(f"[저장] {OUT_Q2}")
+print(f"\n[저장] {OUT_RESULTS}")
 print(f"[저장] {OUT_PLOT}")
