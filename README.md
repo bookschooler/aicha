@@ -25,7 +25,7 @@ Track A — 수요 예측 모델 (Pooled OLS)
   Y = log(카페음료 업종 당월매출)
   X = 수요변수 6개 + 분기 더미 8개 + 상권유형 더미 3개
   → GroupKFold(n_splits=5, groups=상권_코드) OOF 잔차 추출
-     잔차 양수 = 수요 대비 매출 과성과 → 시장이 이미 검증된 상권
+     잔차 양수 = 수요 대비 매출 과성과 → 시장이 이미 검증된 상권 (Q1 블루오션)
      잔차 음수 = 수요 대비 매출 저성과
 
 Track B — 복합 공급부족 지수
@@ -54,7 +54,11 @@ OOF R² = 0.4413 (수요 전용 모델 기준 — R²가 높으면 잔차에 블
 
 ## 분석 파이프라인
 
-### 1단계 — 데이터 수집 (1~24번)
+### Phase 1 — 데이터 수집 및 통합 `(1~24번)`
+
+> 서울시 공공데이터 API, 카카오맵 크롤링, 네이버 데이터랩 등 산재된 소스에서
+> 매출·인구·소득·찻집·검색 트렌드 데이터를 수집하고 하나의 마스터 데이터셋으로 통합합니다.
+> **결과물: 9,760행 × 155개 변수 패널 데이터**
 
 | 스크립트 | 내용 |
 |---------|------|
@@ -82,64 +86,60 @@ OOF R² = 0.4413 (수요 전용 모델 기준 — R²가 높으면 잔차에 블
 | `23_build_trend_index.py` | 상권별 카페 검색지수 생성 |
 | `24_merge_trend.py` | 전체 마스터 데이터셋 완성 (9,760행 × 155변수) |
 
-### 2단계 — EDA (25~30번)
+---
+
+### Phase 2 — 탐색적 분석 및 전처리 `(25~33번)`
+
+> 데이터 분포와 변수 간 관계를 파악하고, 모델에 입력할 수요변수를 선별합니다.
+> XGBoost SHAP으로 변수 중요도를 추출하고 Lasso + VIF로 다중공선성을 제거해
+> 최종 수요변수 6개를 확정합니다. 이후 이상치 제거·표준화·더미변수 생성으로 모델 입력 데이터를 완성합니다.
+> **결과물: 9,392행 × 17개 X변수 분석용 데이터셋**
 
 | 스크립트 | 내용 |
 |---------|------|
-| `25_eda.py` | Y변수 분포, log 변환 효과 시각화 |
+| `25_eda.py` | Y변수(카페음료 매출) 분포 확인 및 log 변환 효과 시각화 |
 | `26_add_subway_lines.py` | 지하철 노선 수 피처 추가 |
 | `27_eda_correlation.py` | 변수 간 상관관계 분석 |
-| `27b_eda_correlation_nooutlier.py` | 이상치 제거 후 상관관계 재분석 |
+| `27b_eda_correlation_nooutlier.py` | 이상치(명동) 제거 전후 상관관계 비교 |
 | `28_eda_advanced.py` | 상권 유형별 매출 분포 분석 |
 | `29_eda_search_by_district.py` | 상권별 검색지수 분포 |
 | `30_eda_advanced2.py` | 블루오션 후보 1차 스크리닝 |
-
-### 3단계 — Feature Selection (31~32번)
-
-| 스크립트 | 내용 |
-|---------|------|
 | `31_feature_selection_xgb_shap.py` | XGBoost + SHAP — 변수 중요도 순위 산출 |
-| `32_lasso_elasticnet.py` | Lasso / ElasticNet + VIF — 최종 6개 변수 확정 |
+| `32_lasso_elasticnet.py` | Lasso / ElasticNet + VIF — 최종 수요변수 6개 확정 |
+| `33_preprocessing.py` | 결측 처리 · 표준화(StandardScaler) · 더미변수 생성 → `33_analysis_ready.csv` |
 
-### 4단계 — 전처리 + 모델링 (33~34번)
+---
+
+### Phase 3 — 모델링 및 블루오션 스코어링 `(34~36번)`
+
+> 수요변수만으로 카페음료 매출을 예측하는 Pooled OLS 모델을 구축하고,
+> GroupKFold OOF 방식으로 data leakage 없이 상권별 잔차를 추출합니다 (Track A).
+> 잔차(수요 대비 매출 성과)와 복합 공급부족 지수(Track B)를 결합해
+> 1,036개 상권을 4개 사분면으로 분류하고 블루오션 랭킹을 산출합니다.
+> **결과물: 1,036개 상권 블루오션 순위**
 
 | 스크립트 | 내용 |
 |---------|------|
-| `33_preprocessing.py` | 결측 처리 · 표준화 · 더미변수 생성 → `33_analysis_ready.csv` |
-| `34_ols.py` | Pooled OLS + GroupKFold OOF 잔차 추출 → `34_oof_residuals.csv` |
-
-### 5단계 — 블루오션 스코어링 (35~36번)
-
-| 스크립트 | 내용 |
-|---------|------|
-| `35_blueocean_score.py` | Track A 잔차 × Track B 공급지수 → 사분면 분류 + Q1/Q2 스코어 |
-| `35_blueocean_smoothing.py` | 공간 평활화 (내 상권 70% + 반경 500m 인접 30%) → 최종 통합 랭킹 |
+| `34_ols.py` | Pooled OLS + GroupKFold(5-fold) OOF 잔차 추출 → `34_oof_residuals.csv` |
+| `35_blueocean_score.py` | Track A 잔차 × Track B 공급지수 → 사분면 분류(Q1~Q4) + 스코어 산출 |
+| `35_blueocean_smoothing.py` | 공간 평활화(내 상권 70% + 반경 500m 인접 30%) → 최종 블루오션 랭킹 |
 | `36_unified_ranking.py` | Top30 통합 랭킹 추출 + 시각화 |
 
-### 6단계 — 프로파일 분석 (37번)
+---
+
+### Phase 4 — 결과 검증 및 서비스화 `(37~44번)`
+
+> 추천 결과의 신뢰성을 프로파일 분석과 민감도 분석으로 검증하고,
+> FastAPI 백엔드와 React 프론트엔드로 누구나 접근 가능한 웹 서비스로 배포합니다.
+> **결과물: 인터랙티브 웹 서비스 (blueocean-finder.vercel.app)**
 
 | 스크립트 | 내용 |
 |---------|------|
 | `37_district_profile.py` | 상위 후보 상권 수요변수 레이더 차트 + 9분기 추세 시각화 |
-
-### 7단계 — 보고서 + 검증 (38~39번)
-
-| 스크립트 | 내용 |
-|---------|------|
 | `38_final_summary.py` | 최종 마크다운 보고서 생성 (`38_final_report.md`) |
 | `39_sensitivity.py` | 공급지수 가중치 민감도 분석 — 결과 robust성 검증 |
-
-### 8단계 — 시각화 (40번)
-
-| 스크립트 | 내용 |
-|---------|------|
 | `40_ppt_visuals.py` | 발표용 추가 차트 5종 생성 (잔차 진단, 상관행렬, 단변량 R² 등) |
-
-### 9단계 — 웹 서비스 API 데이터 준비 (41~44번)
-
-| 스크립트 | 내용 |
-|---------|------|
-| `41_tableau_prep.py` | 태블로/웹용 상권 데이터 정제 (위경도 변환 포함) |
+| `41_tableau_prep.py` | 웹 서비스용 상권 데이터 정제 (위경도 WGS84 변환 포함) |
 | `42_tableau_geojson.py` | 상권 폴리곤 SHP → GeoJSON 변환 (EPSG:5181 → WGS84) |
 | `43_prepare_api_data.py` | API 서빙용 데이터 최종 정제 |
 | `44_add_demand_details.py` | 수요변수 실제값(_raw) + 지하철 역 목록 추가 → `api/unified_ranking.csv` |
@@ -147,11 +147,11 @@ OOF R² = 0.4413 (수요 전용 모델 기준 — R²가 높으면 잔차에 블
 
 ---
 
-## 최종 추천 결과 (블루오션 Top10)
+## 최종 추천 결과 (블루오션 Top5)
 
-> 기준: Q1 스코어 = 0.5 × 잔차분위수(양수 방향) + 0.5 × 복합 공급부족 지수
+> 기준: Q1 스코어 = 0.5 × 잔차분위수(양수 방향) + 0.5 × 복합 공급부족 지수 (공간 평활화 적용)
 
-| 순위 | 상권명 | 유형 | 잔차 | 전략 |
+| 순위 | 상권명 | 유형 | 잔차 | 특성 |
 |------|--------|------|------|------|
 | 1 | 안암역 2번 | 골목상권 | +2.803 | 수요 입증 + 찻집 0개 |
 | 2 | 서원동상점가 | 전통시장 | +2.890 | 수요 입증 + 찻집 0개 |
@@ -185,8 +185,7 @@ api/unified_ranking.csv (1,036개 상권 × 33컬럼)
 | 분류 | 사용 기술 |
 |------|---------|
 | 데이터 수집 | Python, requests, 서울시 공공데이터 API, 카카오맵 API, 네이버 데이터랩 |
-| 분석 | pandas, numpy, scikit-learn, statsmodels, XGBoost, SHAP, scipy |
-| 시각화 | matplotlib, seaborn |
+| 분석 | pandas, numpy, scikit-learn, XGBoost, SHAP, scipy |
 | 백엔드 | FastAPI, pyproj, scipy (KDTree) |
 | 프론트엔드 | React, Tailwind CSS, Recharts, Axios |
 | 배포 | Render (백엔드), Vercel (프론트엔드) |
