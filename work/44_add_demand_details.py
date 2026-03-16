@@ -18,16 +18,17 @@ from scipy.spatial import cKDTree
 import requests
 from dotenv import load_dotenv
 
-load_dotenv(os.path.join(os.path.dirname(__file__), 'api', '.env'))
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', 'api', '.env'))
 KAKAO_KEY = os.environ.get('KAKAO_API_KEY', '')
 BASE = os.path.dirname(__file__)
+ROOT = os.path.dirname(BASE)  # work/ 의 부모 = aicha/
 
 # ── 파일 경로 ──────────────────────────────────────────────────
 STATION_COORDS  = os.path.join(BASE, 'station_coords.csv')
 STATION_LINES   = os.path.join(BASE, 'station_with_lines.csv')
 MAP_STATION     = os.path.join(BASE, 'to_map_with_station.csv')
 ANALYSIS_READY  = os.path.join(BASE, '33_analysis_ready.csv')
-UNIFIED_RANKING = os.path.join(BASE, 'api', 'unified_ranking.csv')
+UNIFIED_RANKING = os.path.join(ROOT, 'api', 'unified_ranking.csv')
 LOG_FILE        = os.path.join(BASE, '44_demand_details_log.txt')
 
 logs = []
