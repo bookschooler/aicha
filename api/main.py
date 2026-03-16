@@ -151,7 +151,7 @@ def _make_result(res, target_name: str, address: str = "") -> dict:
         "tea_shop_count": int(res['찻집수_latest']),
         "tea_shop_names": tea_names,
         "supply_shortage": round(float(res.get('supply_shortage', 0)) * 100, 1),
-        "is_blue_ocean": quadrant in ('Q1_검증시장공백', 'Q2_잠재수요미실현'),
+        "is_blue_ocean": quadrant == 'Q1_검증시장공백',
         "demand_factors": [
             {"subject": "집객시설", "value": round(_sf(res.get('집객시설_수_pct', 50), 50), 1),
              "detail": f"{_si(res.get('집객시설_수_raw', 0)):,}개"},
@@ -231,7 +231,7 @@ def get_scatter_data():
     if df_ranking.empty:
         return {"points": [], "threshold_x": 0.999, "threshold_y": 0.0}
 
-    sub = df_ranking[[c for c in cols if c in df_ranking.columns]].copy()
+    sub = df_ranking[[c for c in cols + ['unified_rank'] if c in df_ranking.columns]].copy()
     sub = sub.dropna(subset=['supply_shortage', 'residual_latest'])
 
     # supply_shortage는 대부분 1.0에 몰려있어서 시각적 jitter 추가 (seed 고정)
@@ -239,8 +239,9 @@ def get_scatter_data():
     sub['x'] = sub['supply_shortage'] + rng.uniform(-0.025, 0.025, len(sub))
     sub['y'] = sub['residual_latest']
 
+    out_cols = [c for c in ['상권_코드_명', 'x', 'y', '사분면', 'unified_rank'] if c in sub.columns]
     return {
-        "points": sub[['상권_코드_명', 'x', 'y', '사분면']].to_dict(orient='records'),
+        "points": sub[out_cols].to_dict(orient='records'),
         "threshold_x": 0.999,
         "threshold_y": 0.0,
     }

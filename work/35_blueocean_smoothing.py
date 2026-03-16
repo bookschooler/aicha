@@ -64,16 +64,12 @@ df['q1_supply_score'] = smoothed_supply
 df['q2_score'] = 0.5 * df['q2_residual_score'] + 0.5 * df['q2_supply_score']
 df['q1_score'] = 0.5 * df['q1_residual_score'] + 0.5 * df['q1_supply_score']
 
-# 통합 스코어: Q1/Q2를 동등하게 반영
-# residual_pct = q1_residual_score (0~1, 높을수록 잔차 양수)
-# max(residual_pct, 1-residual_pct): 잔차가 어느 방향이든 극단적일수록 높은 값
-# → Q1(잔차 양수, pct≈0.9) → max(0.9, 0.1) = 0.9
-# → Q2(잔차 음수, pct≈0.1) → max(0.1, 0.9) = 0.9  ← 동등하게 대우
-df['residual_pct'] = df['q1_residual_score']
-df['residual_extreme'] = np.maximum(df['residual_pct'], 1 - df['residual_pct'])
-df['unified_score'] = 0.5 * df['residual_extreme'] + 0.5 * df['q2_supply_score']
+# 통합 스코어: Q1 기준 (수요가 실증된 상권 우선)
+# q1_score = 0.5 × 잔차분위수(양수 방향) + 0.5 × 공급점수
+# Q1(잔차 양수 + 찻집 없음) 상권이 높은 점수를 받음
+df['unified_score'] = df['q1_score']
 
-# 랭킹 재산정 (통합 스코어 기준)
+# 랭킹 재산정 (q1_score 기준)
 df['블루오션_랭킹'] = df['unified_score'].rank(ascending=False, method='min').astype(int)
 df = df.sort_values('블루오션_랭킹')
 

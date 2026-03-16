@@ -69,11 +69,11 @@ const BlueOceanTooltip = () => {
           <div className="space-y-1.5">
             <div className="flex items-start gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 mt-1 flex-shrink-0" />
-              <span><b className="text-emerald-400">블루오션</b>: Q1(수요가 입증된 안전 진입지) 또는 Q2(선점 가능한 블루오션) 상권</span>
+              <span><b className="text-emerald-400">블루오션</b>: Q1 상권만 해당 — 카페음료 매출이 수요 대비 이미 높고 찻집이 없는 곳 (수요 실증 + 공급 공백)</span>
             </div>
             <div className="flex items-start gap-2">
               <span className="w-2 h-2 rounded-full bg-slate-400 mt-1 flex-shrink-0" />
-              <span><b className="text-slate-400">일반</b>: Q3(진입 비추천) 또는 Q4(이미 포화된 시장) 상권</span>
+              <span><b className="text-slate-400">일반</b>: Q2·Q3·Q4 — 수요 미실현, 저성과, 또는 포화 상권</span>
             </div>
           </div>
           <div className="mt-2 pt-2 border-t border-slate-700 text-slate-500">
@@ -492,6 +492,9 @@ const App = () => {
                           return (
                             <div className={`px-3 py-2 rounded-xl text-xs border shadow-xl ${isT ? 'bg-amber-900/90 border-amber-500' : 'bg-slate-800/90 border-slate-600'}`}>
                               <div className="font-bold mb-1" style={{ color: isT ? '#f59e0b' : getQuadrantColor(d.사분면) }}>{d.상권_코드_명}</div>
+                              {d.unified_rank != null && d.unified_rank <= 10 && (
+                                <div className="text-amber-400 font-bold mb-0.5">🏆 블루오션 {d.unified_rank}위</div>
+                              )}
                               <div className="text-slate-300">{QUADRANT_META[d.사분면]?.label ?? d.사분면}</div>
                               <div className="text-slate-400">잔차: {d.y?.toFixed(2)}</div>
                             </div>
@@ -501,13 +504,14 @@ const App = () => {
                       <Scatter data={scatterData.points} isAnimationActive={false}>
                         {scatterData.points.map((entry, i) => {
                           const isTarget = entry.상권_코드_명 === result.district_name;
+                          const isTop10 = entry.unified_rank != null && entry.unified_rank <= 10;
                           return (
                             <Cell key={i}
-                              fill={isTarget ? '#f59e0b' : getQuadrantColor(entry.사분면)}
-                              fillOpacity={isTarget ? 1 : 0.18}
-                              stroke={isTarget ? '#fff' : 'none'}
-                              strokeWidth={isTarget ? 2 : 0}
-                              r={isTarget ? 9 : 3}
+                              fill={isTarget ? '#f59e0b' : isTop10 ? '#fbbf24' : getQuadrantColor(entry.사분면)}
+                              fillOpacity={isTarget ? 1 : isTop10 ? 0.9 : 0.18}
+                              stroke={isTarget ? '#fff' : isTop10 ? '#f59e0b' : 'none'}
+                              strokeWidth={isTarget ? 2 : isTop10 ? 1.5 : 0}
+                              r={isTarget ? 9 : isTop10 ? 7 : 3}
                             />
                           );
                         })}
