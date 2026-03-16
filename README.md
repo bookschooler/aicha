@@ -4,7 +4,9 @@
 
 🔗 **Live Demo:** [https://blueocean-finder.vercel.app](https://aicha-eight.vercel.app/)
 
-<img src="https://github.com/user-attachments/assets/f7067b4d-2449-4828-8a79-45e65732c510" width="270"/>
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/f7067b4d-2449-4828-8a79-45e65732c510" width="270"/>
+</p>
 
 ---
 
