@@ -1,5 +1,5 @@
 # 44_add_demand_details.py
-# 수요 요인 지수 hover용 상세 정보 추가
+# 수요 요인 지수 hover용 상세 정보 추가 + 백분위(_pct) 계산
 #
 # 출력:
 #   station_with_lines.csv   - station_coords.csv + 호선 정보 추가
@@ -10,6 +10,8 @@
 #       월_평균_소득_금액_raw : 실제값 (원)
 #       총_가구_수_raw        : 실제값 (가구)
 #       카페_검색지수_raw     : 실제값 (0~1)
+#       지하철_노선_수_raw    : 역_목록에서 계산
+#       *_pct                : 전체 상권 대비 백분위 (0~100)
 
 import os, time, re
 import pandas as pd
@@ -174,6 +176,38 @@ df_ranking = df_ranking.merge(df_raw, on='상권_코드_명', how='left')
 df_ranking.to_csv(UNIFIED_RANKING, index=False, encoding='utf-8-sig')
 log(f'[저장] {UNIFIED_RANKING} ({len(df_ranking)}행, {len(df_ranking.columns)}컬럼)')
 log(f'추가된 컬럼: 지하철_역_목록, {", ".join(demand_raw_cols.values())}')
+
+# ══════════════════════════════════════════════════════════════
+# 5단계: 백분위(_pct) 계산
+# ══════════════════════════════════════════════════════════════
+raw_to_pct = {
+    '집객시설_수_raw':       '집객시설_수_pct',
+    '총_직장_인구_수_raw':   '총_직장_인구_수_pct',
+    '월_평균_소득_금액_raw': '월_평균_소득_금액_pct',
+    '총_가구_수_raw':       '총_가구_수_pct',
+    '카페_검색지수_raw':     '카페_검색지수_pct',
+}
+for raw_col, pct_col in raw_to_pct.items():
+    if raw_col in df_ranking.columns:
+        df_ranking[pct_col] = df_ranking[raw_col].rank(pct=True, na_option='keep') * 100
+    else:
+        df_ranking[pct_col] = 50.0
+
+# 지하철 노선 수 raw + pct
+def count_lines(subway_str):
+    if not subway_str or (isinstance(subway_str, float) and subway_str != subway_str):
+        return 0
+    lines = set(re.findall(
+        r'(\d+호선|경의중앙선|신분당선|경춘선|수인분당선|공항철도|경강선|서해선)',
+        str(subway_str)
+    ))
+    return len(lines)
+
+df_ranking['지하철_노선_수_raw'] = df_ranking['지하철_역_목록'].apply(count_lines)
+df_ranking['지하철_노선_수_pct'] = df_ranking['지하철_노선_수_raw'].rank(pct=True, na_option='keep') * 100
+
+df_ranking.to_csv(UNIFIED_RANKING, index=False, encoding='utf-8-sig')
+log(f'[저장] {UNIFIED_RANKING} ({len(df_ranking)}행, {len(df_ranking.columns)}컬럼) — _pct 컬럼 포함')
 
 with open(LOG_FILE, 'w', encoding='utf-8') as f:
     f.write('\n'.join(logs))
