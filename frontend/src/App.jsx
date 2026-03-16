@@ -226,7 +226,7 @@ const App = () => {
   }, [address, doSearch, cancelRetry]);
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-100 p-4 md:p-12 font-sans selection:bg-blue-500/30">
+    <div className="min-h-screen bg-[#0f172a] text-slate-100 p-4 md:p-6 font-sans selection:bg-blue-500/30">
       <SpeedInsights />
 
       <div className="max-w-6xl mx-auto flex justify-end mb-4">
@@ -240,7 +240,7 @@ const App = () => {
         </div>
       </div>
 
-      <header className="max-w-6xl mx-auto mb-12 text-center">
+      <header className="max-w-6xl mx-auto mb-6 text-center">
         <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent mb-4 tracking-tight">
           BlueOcean Finder
         </h1>
@@ -248,7 +248,7 @@ const App = () => {
       </header>
 
       <main className="max-w-6xl mx-auto">
-        <section className="bg-slate-800/50 backdrop-blur-xl p-2 rounded-2xl border border-slate-700 shadow-2xl mb-12">
+        <section className="bg-slate-800/50 backdrop-blur-xl p-2 rounded-2xl border border-slate-700 shadow-2xl mb-0">
           <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" size={22} />
@@ -562,11 +562,11 @@ const App = () => {
         )}
 
         {!result && !loading && (
-          <div className="flex flex-col items-center justify-center py-16 select-none">
+          <div className="flex flex-col items-center justify-center py-0 select-none">
             <img
               src={mintTeaImg}
               alt="찻집 일러스트"
-              className="w-64 h-64 mb-6"
+              className="w-[420px] h-auto mb-4 -mt-20"
               draggable="false"
             />
             <p className="text-lg font-semibold text-slate-500 mb-1">서울 찻집 블루오션 상권 찾기</p>
@@ -575,7 +575,7 @@ const App = () => {
         )}
       </main>
 
-      <footer className="max-w-6xl mx-auto mt-20 pt-8 border-t border-slate-800 text-center text-slate-600 text-sm">
+      <footer className="max-w-6xl mx-auto mt-6 pt-4 border-t border-slate-800 text-center text-slate-600 text-sm">
         &copy; 2026 BlueOcean Finder. 서울시 상권 데이터를 기반으로 분석합니다.
       </footer>
     </div>
