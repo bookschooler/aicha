@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import mintTeaImg from './assets/mint-tea.svg';
+import mintTeaImg from './assets/mint-tea.svg?url';
 import { Search, MapPin, TrendingUp, BarChart2, Award, Info, Activity, HelpCircle, Loader2 } from 'lucide-react';
 import {
   ResponsiveContainer,
