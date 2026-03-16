@@ -12,7 +12,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react"
 
 // 사분면 메타 정보
 const QUADRANT_META = {
-  'Q1_검증시장공백':   { color: '#10b981', short: 'Q1', label: '수요가 입증된 안전 진입지', desc: '매출↑ · 경쟁↓' },
+  'Q1_검증시장공백':   { color: '#10b981', short: 'Q1', label: '수요 입증된 안전 진입지', desc: '매출↑ · 경쟁↓' },
   'Q2_잠재수요미실현': { color: '#6366f1', short: 'Q2', label: '선점 가능한 블루오션',     desc: '잠재수요↑ · 경쟁↓' },
   'Q4_레드오션':      { color: '#f43f5e', short: 'Q4', label: '이미 포화된 시장',         desc: '매출↑ · 경쟁↑' },
   'Q3_저성과포화':    { color: '#94a3b8', short: 'Q3', label: '진입 비추천',              desc: '매출↓ · 경쟁↑' },
@@ -83,6 +83,50 @@ const BlueOceanTooltip = () => {
         document.body
       )}
     </div>
+  );
+};
+
+// 레이더 차트 커스텀 꼭짓점 tick — hover 시 tooltip 표시
+const RadarTick = ({ x, y, payload, demandFactors }) => {
+  const [show, setShow] = useState(false);
+  const item = demandFactors?.find(d => d.subject === payload.value);
+  if (!item) return <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fill="#94a3b8" fontSize={12} fontWeight={700}>{payload.value}</text>;
+
+  // 툴팁 위치: 꼭짓점 기준으로 바깥쪽
+  const TW = 200;
+  return (
+    <g>
+      <text
+        x={x} y={y}
+        textAnchor="middle" dominantBaseline="central"
+        fill={show ? '#a5b4fc' : '#94a3b8'} fontSize={12} fontWeight={700}
+        style={{ cursor: 'pointer' }}
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+      >
+        {payload.value}
+      </text>
+      {show && (
+        <foreignObject x={x - TW / 2} y={y - 80} width={TW} height={80} style={{ overflow: 'visible' }}>
+          <div
+            xmlns="http://www.w3.org/1999/xhtml"
+            style={{
+              background: '#0f172a', border: '1px solid #6366f1',
+              borderRadius: 10, padding: '8px 12px', fontSize: 12,
+              color: '#fff', pointerEvents: 'none', whiteSpace: 'nowrap',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            }}
+          >
+            <div style={{ color: '#818cf8', fontWeight: 700, marginBottom: 4 }}>{item.subject}</div>
+            {item.subject === '지하철' && item.detail && item.detail !== '-'
+              ? item.detail.split(', ').map((s, i) => <div key={i} style={{ fontWeight: 600 }}>{s}</div>)
+              : <div style={{ fontWeight: 600 }}>{item.detail ?? '-'}</div>
+            }
+            <div style={{ color: '#64748b', marginTop: 4 }}>서울 내 {item.value}백분위</div>
+          </div>
+        </foreignObject>
+      )}
+    </g>
   );
 };
 
@@ -398,28 +442,8 @@ const App = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <RadarChart cx="50%" cy="50%" outerRadius="75%" data={result.demand_factors}>
                         <PolarGrid stroke="#334155" />
-                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
+                        <PolarAngleAxis dataKey="subject" tick={(props) => <RadarTick {...props} demandFactors={result.demand_factors} />} />
                         <Radar name="상권 지수" dataKey="value" stroke="#6366f1" strokeWidth={3} fill="#6366f1" fillOpacity={0.3} />
-                        <Tooltip
-                          cursor={false}
-                          content={({ active, payload }) => {
-                            if (!active || !payload?.length) return null;
-                            const item = payload[0]?.payload;
-                            if (!item) return null;
-                            return (
-                              <div className="bg-slate-900 border border-indigo-500/50 rounded-xl p-3 shadow-2xl" style={{ maxWidth: 240 }}>
-                                <div className="font-bold text-indigo-400 text-xs mb-1.5">{item.subject}</div>
-                                {item.subject === '지하철' && item.detail && item.detail !== '-'
-                                  ? item.detail.split(', ').map((s, i) => (
-                                      <div key={i} className="text-white text-sm font-semibold leading-snug">{s}</div>
-                                    ))
-                                  : <div className="text-white text-sm font-semibold leading-snug">{item.detail ?? '-'}</div>
-                                }
-                                <div className="text-slate-500 text-xs mt-1.5">서울 내 {item.value}백분위</div>
-                              </div>
-                            );
-                          }}
-                        />
                       </RadarChart>
                     </ResponsiveContainer>
                   </div>
