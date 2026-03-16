@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
+import mintTeaImg from '/mint-tea.svg';
 import { Search, MapPin, TrendingUp, BarChart2, Award, Info, Activity, HelpCircle, Loader2 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -563,7 +564,7 @@ const App = () => {
         {!result && !loading && (
           <div className="flex flex-col items-center justify-center py-16 select-none">
             <img
-              src="/mint-tea.svg"
+              src={mintTeaImg}
               alt="찻집 일러스트"
               className="w-64 h-64 opacity-70 mb-6"
               draggable="false"
