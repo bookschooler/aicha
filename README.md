@@ -4,7 +4,8 @@
 
 🔗 **Live Demo:** [https://blueocean-finder.vercel.app](https://aicha-eight.vercel.app/)
 
-https://github.com/user-attachments/assets/f7067b4d-2449-4828-8a79-45e65732c510
+![웹앱 화면](https://github.com/user-attachments/assets/f7067b4d-2449-4828-8a79-45e65732c510)
+
 ---
 
 ## 프로젝트 개요
