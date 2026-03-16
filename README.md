@@ -2,7 +2,7 @@
 
 **서울시 1,139개 상권 × 9분기 데이터를 활용해 찻집 창업에 적합한 블루오션 입지를 분석하고, 인터랙티브 웹 서비스로 제공하는 프로젝트입니다.**
 
-🔗 **Live Demo:** [blueocean-finder.vercel.app](https://blueocean-finder.vercel.app)
+🔗 **Live Demo:** [https://blueocean-finder.vercel.app](https://aicha-eight.vercel.app/)
 
 ---
 
