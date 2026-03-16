@@ -86,45 +86,54 @@ const BlueOceanTooltip = () => {
   );
 };
 
-// 레이더 차트 커스텀 꼭짓점 tick — hover 시 tooltip 표시
+// 레이더 차트 커스텀 꼭짓점 tick — Portal 방식으로 tooltip 표시
 const RadarTick = ({ x, y, payload, demandFactors }) => {
-  const [show, setShow] = useState(false);
+  const [pos, setPos] = useState(null);
   const item = demandFactors?.find(d => d.subject === payload.value);
-  if (!item) return <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fill="#94a3b8" fontSize={12} fontWeight={700}>{payload.value}</text>;
 
-  // 툴팁 위치: 꼭짓점 기준으로 바깥쪽
-  const TW = 200;
+  const handleMouseEnter = (e) => {
+    const rect = e.target.getBoundingClientRect();
+    setPos({ top: rect.top - 8, left: rect.left + rect.width / 2 });
+  };
+  const handleMouseLeave = () => setPos(null);
+
   return (
     <g>
       <text
         x={x} y={y}
         textAnchor="middle" dominantBaseline="central"
-        fill={show ? '#a5b4fc' : '#94a3b8'} fontSize={12} fontWeight={700}
+        fill={pos ? '#a5b4fc' : '#94a3b8'} fontSize={12} fontWeight={700}
         style={{ cursor: 'pointer' }}
-        onMouseEnter={() => setShow(true)}
-        onMouseLeave={() => setShow(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {payload.value}
       </text>
-      {show && (
-        <foreignObject x={x - TW / 2} y={y - 80} width={TW} height={80} style={{ overflow: 'visible' }}>
-          <div
-            xmlns="http://www.w3.org/1999/xhtml"
-            style={{
-              background: '#0f172a', border: '1px solid #6366f1',
-              borderRadius: 10, padding: '8px 12px', fontSize: 12,
-              color: '#fff', pointerEvents: 'none', whiteSpace: 'nowrap',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-            }}
-          >
-            <div style={{ color: '#818cf8', fontWeight: 700, marginBottom: 4 }}>{item.subject}</div>
-            {item.subject === '지하철' && item.detail && item.detail !== '-'
-              ? item.detail.split(', ').map((s, i) => <div key={i} style={{ fontWeight: 600 }}>{s}</div>)
-              : <div style={{ fontWeight: 600 }}>{item.detail ?? '-'}</div>
-            }
-            <div style={{ color: '#64748b', marginTop: 4 }}>서울 내 {item.value}백분위</div>
-          </div>
-        </foreignObject>
+      {pos && item && createPortal(
+        <div style={{
+          position: 'fixed',
+          top: pos.top,
+          left: pos.left,
+          transform: 'translate(-50%, -100%)',
+          zIndex: 9999,
+          background: '#0f172a',
+          border: '1px solid #6366f1',
+          borderRadius: 10,
+          padding: '8px 12px',
+          fontSize: 12,
+          color: '#fff',
+          pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+        }}>
+          <div style={{ color: '#818cf8', fontWeight: 700, marginBottom: 4 }}>{item.subject}</div>
+          {item.subject === '지하철' && item.detail && item.detail !== '-'
+            ? item.detail.split(', ').map((s, i) => <div key={i} style={{ fontWeight: 600 }}>{s}</div>)
+            : <div style={{ fontWeight: 600 }}>{item.detail ?? '-'}</div>
+          }
+          <div style={{ color: '#64748b', marginTop: 4 }}>서울 내 {item.value}백분위</div>
+        </div>,
+        document.body
       )}
     </g>
   );
