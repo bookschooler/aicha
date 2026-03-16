@@ -36,6 +36,11 @@ node_modules/
 package-lock.json
 package.json
 
+# 태블로 관련 파일
+work/41_tableau*
+work/42_tableau*
+work/42_geojson*
+
 # 개인 작업 폴더 (로컬 전용)
 PPT 샘플/
 PPT 제작/
