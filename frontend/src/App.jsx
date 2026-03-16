@@ -566,7 +566,7 @@ const App = () => {
             <img
               src={mintTeaImg}
               alt="찻집 일러스트"
-              className="w-64 h-64 opacity-70 mb-6"
+              className="w-64 h-64 mb-6"
               draggable="false"
             />
             <p className="text-lg font-semibold text-slate-500 mb-1">서울 찻집 블루오션 상권 찾기</p>
