@@ -1,4 +1,4 @@
-# 44_add_demand_details.py
+# 41_add_demand_details.py
 # 수요 요인 지수 hover용 상세 정보 추가 + 백분위(_pct) 계산
 #
 # 출력:
@@ -31,7 +31,7 @@ STATION_LINES   = os.path.join(BASE, 'station_with_lines.csv')
 MAP_STATION     = os.path.join(BASE, 'to_map_with_station.csv')
 ANALYSIS_READY  = os.path.join(BASE, '33_analysis_ready.csv')
 UNIFIED_RANKING = os.path.join(ROOT, 'api', 'unified_ranking.csv')
-LOG_FILE        = os.path.join(BASE, '44_demand_details_log.txt')
+LOG_FILE        = os.path.join(BASE, '41_demand_details_log.txt')
 
 logs = []
 def log(msg): print(msg); logs.append(msg)
