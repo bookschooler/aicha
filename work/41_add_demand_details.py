@@ -170,7 +170,9 @@ df_raw = df_raw.rename(columns=demand_raw_cols)
 subway_mapping = df_map.set_index('상권_코드_명')['지하철_역_목록'].to_dict()
 df_ranking['지하철_역_목록'] = df_ranking['상권_코드_명'].map(subway_mapping).fillna('')
 
-# 수요변수 실제값
+# 수요변수 실제값 (중복 방지: 기존 _raw/_pct 컬럼 제거 후 merge)
+drop_cols = [c for c in df_ranking.columns if c.endswith('_raw') or c.endswith('_pct') or c.endswith('_raw_x') or c.endswith('_raw_y')]
+df_ranking = df_ranking.drop(columns=drop_cols, errors='ignore')
 df_ranking = df_ranking.merge(df_raw, on='상권_코드_명', how='left')
 
 df_ranking.to_csv(UNIFIED_RANKING, index=False, encoding='utf-8-sig')
@@ -207,7 +209,7 @@ df_ranking['지하철_노선_수_raw'] = df_ranking['지하철_역_목록'].appl
 df_ranking['지하철_노선_수_pct'] = df_ranking['지하철_노선_수_raw'].rank(pct=True, na_option='keep') * 100
 
 df_ranking.to_csv(UNIFIED_RANKING, index=False, encoding='utf-8-sig')
-log(f'[저장] {UNIFIED_RANKING} ({len(df_ranking)}행, {len(df_ranking.columns)}컬럼) — _pct 컬럼 포함')
+log(f'[저장] {UNIFIED_RANKING} ({len(df_ranking)}행, {len(df_ranking.columns)}컬럼) - _pct 컬럼 포함')
 
 with open(LOG_FILE, 'w', encoding='utf-8') as f:
     f.write('\n'.join(logs))
