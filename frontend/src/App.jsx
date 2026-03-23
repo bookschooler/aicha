@@ -454,6 +454,31 @@ const App = () => {
                         <PolarGrid stroke="#334155" />
                         <PolarAngleAxis dataKey="subject" tick={(props) => <RadarTick {...props} demandFactors={result.demand_factors} />} />
                         <Radar name="상권 지수" dataKey="value" stroke="#6366f1" strokeWidth={3} fill="#6366f1" fillOpacity={0.3} />
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (!active || !payload?.length) return null;
+                            const item = payload[0].payload;
+                            return (
+                              <div style={{
+                                background: '#0f172a',
+                                border: '1px solid #6366f1',
+                                borderRadius: 10,
+                                padding: '8px 12px',
+                                fontSize: 12,
+                                color: '#fff',
+                                whiteSpace: 'nowrap',
+                                boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+                              }}>
+                                <div style={{ color: '#818cf8', fontWeight: 700, marginBottom: 4 }}>{item.subject}</div>
+                                {item.subject === '지하철' && item.detail && item.detail !== '-'
+                                  ? item.detail.split(', ').map((s, i) => <div key={i} style={{ fontWeight: 600 }}>{s}</div>)
+                                  : <div style={{ fontWeight: 600 }}>{item.detail ?? '-'}</div>
+                                }
+                                <div style={{ color: '#64748b', marginTop: 4 }}>서울 내 {item.value}백분위</div>
+                              </div>
+                            );
+                          }}
+                        />
                       </RadarChart>
                     </ResponsiveContainer>
                   </div>
